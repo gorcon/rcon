@@ -228,5 +228,14 @@ func (c *Conn) read(timeout time.Duration) (*Packet, error) {
 		return packet, err
 	}
 
+	// Workaround for Rust server. Rust rcon server responses packet with a
+	// type of 4 and the next packet is valid. It is undocumented, so skip
+	// packet and read next.
+	if packet.Type == 4 {
+		if _, err := packet.ReadFrom(c.conn); err != nil {
+			return packet, err
+		}
+	}
+
 	return packet, nil
 }
