@@ -11,10 +11,11 @@ import (
 )
 
 const (
-	// This is an artificial restriction, but it will help in case of random large queries.
+	// MaxCommandLen is an artificial restriction, but it will help in case of random
+	// large queries.
 	MaxCommandLen = 1000
 
-	// The first packet sent by the client will be a SERVERDATA_AUTH packet,
+	// SERVERDATA_AUTH is the first packet sent by the client,
 	// which is used to authenticate the conn with the server.
 	SERVERDATA_AUTH int32 = 3
 
@@ -24,23 +25,23 @@ const (
 	// regardless of the value of the request ID.
 	SERVERDATA_AUTH_ID int32 = 42
 
-	// This packet is a notification of the conn's current auth status.
-	// When the server receives an auth request, it will respond with an empty
+	// SERVERDATA_RESPONSE_VALUE packet is a notification of the conn's current auth
+	// status. When the server receives an auth request, it will respond with an empty
 	// SERVERDATA_RESPONSE_VALUE, followed immediately by a SERVERDATA_AUTH_RESPONSE
 	// indicating whether authentication succeeded or failed. Note that the status
 	// code is returned in the packet id field, so when pairing the response with
 	// the original auth request, you may need to look at the packet id of the
-	// preceeding SERVERDATA_RESPONSE_VALUE.
+	// preceding SERVERDATA_RESPONSE_VALUE.
 	// If authentication was successful, the ID assigned by the request.
 	// If auth failed, -1 (0xFF FF FF FF).
 	SERVERDATA_AUTH_RESPONSE int32 = 2
 
-	// A SERVERDATA_RESPONSE_VALUE packet is the response to a SERVERDATA_EXECCOMMAND request.
-	// The ID assigned by the original request.
+	// SERVERDATA_RESPONSE_VALUE packet is the response to a SERVERDATA_EXECCOMMAND
+	// request. The ID assigned by the original request.
 	SERVERDATA_RESPONSE_VALUE int32 = 0
 
-	// This packet type represents a command issued to the server by a client.
-	// The response will vary depending on the command issued.
+	// SERVERDATA_EXECCOMMAND packet type represents a command issued to the server
+	// by a client. The response will vary depending on the command issued.
 	SERVERDATA_EXECCOMMAND int32 = 2
 
 	// SERVERDATA_EXECCOMMAND_ID is any positive integer, chosen by the client
@@ -56,7 +57,8 @@ var (
 	// from authentication response.
 	ErrInvalidAuthResponse = errors.New("invalid authentication packet type response")
 
-	// ErrNetClosing is returned when the package id from authentication response is -1.
+	// ErrAuthFailed is returned when the package id from authentication
+	// response is -1.
 	ErrAuthFailed = errors.New("authentication failed")
 
 	// ErrInvalidPacketID is returned when the package id from server response
@@ -67,7 +69,8 @@ var (
 	// response is not equal to null-terminated ASCII strings.
 	ErrInvalidPacketPadding = errors.New("invalid response padding")
 
-	// ErrResponseTooSmall is returned when the server response is smaller than 10 bytes.
+	// ErrResponseTooSmall is returned when the server response is smaller
+	// than 10 bytes.
 	ErrResponseTooSmall = errors.New("response too small")
 
 	// ErrCommandTooLong is returned when executed command length is bigger
@@ -75,7 +78,7 @@ var (
 	ErrCommandTooLong = errors.New("command too long")
 )
 
-// Conn is source RCON generic stream-oriented network conn.
+// Conn is source RCON generic stream-oriented network connection.
 type Conn struct {
 	conn net.Conn
 }
@@ -138,7 +141,7 @@ func (c *Conn) RemoteAddr() net.Addr {
 	return c.conn.RemoteAddr()
 }
 
-// Close closes the conn.
+// Close closes the connection.
 func (c *Conn) Close() error {
 	return c.conn.Close()
 }

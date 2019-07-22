@@ -57,9 +57,9 @@ func (s *MockServer) Close() error {
 		// Close connections and add original error if occurred.
 		if err2 := c.Close(); err2 != nil {
 			if err == nil {
-				err = fmt.Errorf("close conenction error: %s", err2)
+				err = fmt.Errorf("close connenction error: %s", err2)
 			} else {
-				err = fmt.Errorf("close conenction error: %s. Previous error: %s", err2, err)
+				err = fmt.Errorf("close connenction error: %s. Previous error: %s", err2, err)
 			}
 		}
 	}
@@ -189,7 +189,7 @@ func (s *MockServer) reportError(err error) bool {
 	case s.errors <- err:
 		return true
 	default:
-		fmt.Sprintf("erros channel is locked: %s", err)
+		fmt.Printf("erros channel is locked: %s\n", err)
 		// panic("erros channel is locked")
 		return false
 	}

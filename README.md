@@ -1,4 +1,8 @@
-# rcon
+# Rcon
+[![Go Report Card](https://goreportcard.com/badge/github.com/gorcon/rcon)](https://goreportcard.com/report/github.com/gorcon/rcon)
+[![Build Status](https://travis-ci.org/gorcon/rcon.svg?branch=master)](https://travis-ci.org/gorcon/rcon)
+[![GoDoc](https://img.shields.io/badge/godoc-reference-blue.svg)](https://godoc.org/github.com/gorcon/rcon)
+
 Source RCON Protocol implementation in Go.
 
 ## Protocol Specifications
@@ -10,7 +14,6 @@ RCON Protocol is described in the [valve documentation](https://developer.valves
 * [Project Zomboid](https://store.steampowered.com/app/108600) 
 * [Conan Exiles](https://store.steampowered.com/app/440900)
 * [Rust](https://store.steampowered.com/app/252490)
-* [Minecraft](https://www.minecraft.net)
 
 Open pull request if you have successfully used a package with another game with rcon support and add it to the list.
 

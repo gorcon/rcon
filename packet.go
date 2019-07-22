@@ -38,16 +38,18 @@ type Packet struct {
 
 	// The packet type field is a 32-bit little endian integer, which indicates
 	// the purpose of the packet. Its value will always be either 0, 2, or 3,
-	// depending on which of the following request/response types the packet represents:
+	// depending on which of the following request/response types the packet
+	// represents:
 	// SERVERDATA_AUTH = 3,
 	// SERVERDATA_AUTH_RESPONSE = 2,
 	// SERVERDATA_EXECCOMMAND = 2,
 	// SERVERDATA_RESPONSE_VALUE = 0.
 	Type int32
 
-	// The packet body field is a null-terminated string encoded in ASCII (i.e. ASCIIZ).
-	// Depending on the packet type, it may contain either the RCON MockPassword for the RemoteServer,
-	// the command to be executed, or the RemoteServer's response to a request.
+	// The packet body field is a null-terminated string encoded in ASCII
+	// (i.e. ASCIIZ). Depending on the packet type, it may contain either the
+	// RCON MockPassword for the RemoteServer, the command to be executed,
+	// or the RemoteServer's response to a request.
 	body []byte
 }
 
