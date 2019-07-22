@@ -25,7 +25,7 @@ const (
 	// regardless of the value of the request ID.
 	SERVERDATA_AUTH_ID int32 = 42
 
-	// SERVERDATA_RESPONSE_VALUE packet is a notification of the conn's current auth
+	// SERVERDATA_AUTH_RESPONSE packet is a notification of the conn's current auth
 	// status. When the server receives an auth request, it will respond with an empty
 	// SERVERDATA_RESPONSE_VALUE, followed immediately by a SERVERDATA_AUTH_RESPONSE
 	// indicating whether authentication succeeded or failed. Note that the status

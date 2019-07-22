@@ -52,6 +52,11 @@ func (s *MockServer) Close() error {
 	close(s.quit)
 
 	err := s.listener.Close()
+
+	// Waiting for server connections.
+	s.wg.Wait()
+
+	// And close remaining connections.
 	s.mu.Lock()
 	for c := range s.connections {
 		// Close connections and add original error if occurred.
@@ -64,9 +69,6 @@ func (s *MockServer) Close() error {
 		}
 	}
 	s.mu.Unlock()
-
-	// Waiting for server connections.
-	s.wg.Wait()
 
 	return err
 }
