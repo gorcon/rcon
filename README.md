@@ -14,6 +14,7 @@ RCON Protocol is described in the [valve documentation](https://developer.valves
 * [Project Zomboid](https://store.steampowered.com/app/108600) 
 * [Conan Exiles](https://store.steampowered.com/app/440900)
 * [Rust](https://store.steampowered.com/app/252490)
+* [ARK: Survival Evolved](https://store.steampowered.com/app/346110)
 
 Open pull request if you have successfully used a package with another game with rcon support and add it to the list.
 
