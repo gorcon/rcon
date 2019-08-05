@@ -11,6 +11,14 @@ import (
 )
 
 const (
+	// DefaultDialTimeout provides default auth timeout to remote server.
+	// TODO: Provide the ability to manage dial timeout.
+	DefaultDialTimeout = 10 * time.Second
+
+	// DefaultTimeout provides default timeout to tcp read/write operations.
+	// TODO: Provide the ability to manage timeout.
+	DefaultTimeout = 10 * time.Second
+
 	// MaxCommandLen is an artificial restriction, but it will help in case of random
 	// large queries.
 	MaxCommandLen = 1000
@@ -76,6 +84,9 @@ var (
 	// ErrCommandTooLong is returned when executed command length is bigger
 	// than MaxCommandLen characters.
 	ErrCommandTooLong = errors.New("command too long")
+
+	// ErrCommandEmpty is returned when executed command length equal 0.
+	ErrCommandEmpty = errors.New("command too small")
 )
 
 // Conn is source RCON generic stream-oriented network connection.
@@ -85,8 +96,7 @@ type Conn struct {
 
 // Dial creates a new authorized Conn tcp dialer connection.
 func Dial(address string, password string) (*Conn, error) {
-	const timeout = 10 * time.Second
-	conn, err := net.DialTimeout("tcp", address, timeout)
+	conn, err := net.DialTimeout("tcp", address, DefaultDialTimeout)
 	if err != nil {
 		// Failed to open TCP conn to the server.
 		return nil, err
@@ -94,7 +104,7 @@ func Dial(address string, password string) (*Conn, error) {
 
 	client := &Conn{conn: conn}
 
-	if err := client.auth(password); err != nil {
+	if err := client.auth(password, DefaultDialTimeout); err != nil {
 		// Failed to auth conn with the server.
 		if err2 := client.Close(); err2 != nil {
 			return client, fmt.Errorf("an error occurred while handling another error: %s. Previous error: %s", err2, err)
@@ -111,15 +121,20 @@ func Dial(address string, password string) (*Conn, error) {
 // and compiling its payload bytes in the appropriate order. The response body
 // is decompiled from bytes into a string for return.
 func (c *Conn) Execute(command string) (string, error) {
+	if len(command) == 0 {
+		return "", ErrCommandEmpty
+	}
+
 	if len(command) > MaxCommandLen {
 		return "", ErrCommandTooLong
 	}
 
-	if _, err := c.write(SERVERDATA_EXECCOMMAND, SERVERDATA_EXECCOMMAND_ID, command); err != nil {
+	_, err := c.write(SERVERDATA_EXECCOMMAND, SERVERDATA_EXECCOMMAND_ID, command, DefaultTimeout)
+	if err != nil {
 		return "", err
 	}
 
-	response, err := c.read(30 * time.Second)
+	response, err := c.read(DefaultTimeout)
 	if err != nil {
 		return response.Body(), err
 	}
@@ -148,10 +163,9 @@ func (c *Conn) Close() error {
 
 // auth sends SERVERDATA_AUTH request to the remote server and
 // authenticates client for the next requests.
-func (c *Conn) auth(password string) error {
-	timeout := 10 * time.Second
-
-	if _, err := c.write(SERVERDATA_AUTH, SERVERDATA_AUTH_ID, password); err != nil {
+func (c *Conn) auth(password string, timeout time.Duration) error {
+	_, err := c.write(SERVERDATA_AUTH, SERVERDATA_AUTH_ID, password, timeout)
+	if err != nil {
 		return err
 	}
 
@@ -196,7 +210,9 @@ func (c *Conn) auth(password string) error {
 }
 
 // Write creates packet and writes it to established tcp conn.
-func (c *Conn) write(packetType int32, packetID int32, command string) (int64, error) {
+func (c *Conn) write(packetType int32, packetID int32, command string, timeout time.Duration) (int64, error) {
+	_ = c.conn.SetWriteDeadline(time.Now().Add(timeout))
+
 	packet := NewPacket(packetType, packetID, command)
 
 	return packet.WriteTo(c.conn)
@@ -204,7 +220,7 @@ func (c *Conn) write(packetType int32, packetID int32, command string) (int64, e
 
 // readHeader reads structured binary data without body from c.conn into packet.
 func (c *Conn) readHeader(timeout time.Duration) (Packet, error) {
-	c.conn.SetReadDeadline(time.Now().Add(timeout))
+	_ = c.conn.SetReadDeadline(time.Now().Add(timeout))
 
 	var packet Packet
 	if err := binary.Read(c.conn, binary.LittleEndian, &packet.Size); err != nil {
@@ -224,7 +240,7 @@ func (c *Conn) readHeader(timeout time.Duration) (Packet, error) {
 
 // read reads structured binary data from c.conn into packet.
 func (c *Conn) read(timeout time.Duration) (*Packet, error) {
-	c.conn.SetReadDeadline(time.Now().Add(timeout))
+	_ = c.conn.SetReadDeadline(time.Now().Add(timeout))
 
 	packet := &Packet{}
 	if _, err := packet.ReadFrom(c.conn); err != nil {

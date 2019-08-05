@@ -5,6 +5,7 @@ import (
 	"io"
 	"net"
 	"sync"
+	"time"
 )
 
 const (
@@ -126,6 +127,9 @@ func (s *MockServer) handle(conn net.Conn) {
 		case SERVERDATA_AUTH:
 			responseType = SERVERDATA_AUTH_RESPONSE
 			if request.Body() != MockPassword {
+				if request.Body() == "timeout" {
+					time.Sleep(DefaultDialTimeout + 1*time.Second)
+				}
 				// If authentication was failed, the ID must be assigned to -1.
 				responseID = -1
 				responseBody = string([]byte{0x00})
@@ -134,6 +138,9 @@ func (s *MockServer) handle(conn net.Conn) {
 			switch request.Body() {
 			case MockCommandHelp:
 				responseBody = MockCommandHelpResponse
+			case "timeout":
+				time.Sleep(DefaultTimeout + 1*time.Second)
+				responseBody = "timeout"
 			default:
 				responseBody = "unknown command"
 			}
