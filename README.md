@@ -25,7 +25,7 @@ Open pull request if you have successfully used a package with another game with
 go get github.com/gorcon/rcon
 ```
 
-Or use dependency manager such as dep or vgo.
+See [Changelog](CHANGELOG.md) for release details.
 
 ## Usage
 
@@ -57,7 +57,7 @@ func main() {
 
 ## Requirements
 
-Go 1.11 or higher
+Go 1.13 or higher
 
 ## Contribute
 
