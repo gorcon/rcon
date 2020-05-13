@@ -16,5 +16,5 @@ All notable changes to this project will be documented in this file.
 ### Added
 - Initial implementation.
 
-[Unreleased]: https://github.com/gorcon/rcon-cli/compare/v1.1.0...HEAD
-[v1.1.0]: https://github.com/gorcon/rcon-cli/compare/v1.0.0...v1.1.0
+[Unreleased]: https://github.com/gorcon/rcon/compare/v1.1.0...HEAD
+[v1.1.0]: https://github.com/gorcon/rcon/compare/v1.0.0...v1.1.0
