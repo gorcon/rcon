@@ -103,7 +103,7 @@ func (packet *Packet) WriteTo(w io.Writer) (n int64, err error) {
 
 // ReadFrom implements io.ReaderFrom for read a packet from r.
 func (packet *Packet) ReadFrom(r io.Reader) (n int64, err error) {
-	if err = binary.Read(r, binary.LittleEndian, &packet.Size); err != nil {
+	if err := binary.Read(r, binary.LittleEndian, &packet.Size); err != nil {
 		return n, err
 	}
 	n += 4
@@ -111,12 +111,12 @@ func (packet *Packet) ReadFrom(r io.Reader) (n int64, err error) {
 		return n, ErrResponseTooSmall
 	}
 
-	if err = binary.Read(r, binary.LittleEndian, &packet.ID); err != nil {
+	if err := binary.Read(r, binary.LittleEndian, &packet.ID); err != nil {
 		return n, err
 	}
 	n += 4
 
-	if err = binary.Read(r, binary.LittleEndian, &packet.Type); err != nil {
+	if err := binary.Read(r, binary.LittleEndian, &packet.Type); err != nil {
 		return n, err
 	}
 	n += 4

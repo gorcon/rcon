@@ -121,7 +121,7 @@ func Dial(address string, password string) (*Conn, error) {
 // and compiling its payload bytes in the appropriate order. The response body
 // is decompiled from bytes into a string for return.
 func (c *Conn) Execute(command string) (string, error) {
-	if len(command) == 0 {
+	if command == "" {
 		return "", ErrCommandEmpty
 	}
 
@@ -181,7 +181,7 @@ func (c *Conn) auth(password string, timeout time.Duration) error {
 	// do this case optional.
 	if response.Type == SERVERDATA_RESPONSE_VALUE {
 		// Discard empty SERVERDATA_RESPONSE_VALUE from authentication response.
-		c.conn.Read(make([]byte, response.Size-int32(PacketHeaderSize)))
+		_, _ = c.conn.Read(make([]byte, response.Size-PacketHeaderSize))
 
 		if response, err = c.readHeader(timeout); err != nil {
 			return err
@@ -189,7 +189,7 @@ func (c *Conn) auth(password string, timeout time.Duration) error {
 	}
 
 	// We must to read response body.
-	buffer := make([]byte, response.Size-int32(PacketHeaderSize))
+	buffer := make([]byte, response.Size-PacketHeaderSize)
 	if _, err := c.conn.Read(buffer); err != nil {
 		return err
 	}
