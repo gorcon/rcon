@@ -17,4 +17,4 @@ All notable changes to this project will be documented in this file.
 - Initial implementation.
 
 [Unreleased]: https://github.com/gorcon/rcon/compare/v1.1.2...HEAD
-[v1.1.2]: https://github.com/gorcon/rcon/compare/v1.0.0...v1.1.0
+[v1.1.2]: https://github.com/gorcon/rcon/compare/v1.0.0...v1.1.2
