@@ -26,5 +26,5 @@ changed.
 - Initial implementation.
 
 [Unreleased]: https://github.com/gorcon/rcon/compare/v1.2.0...HEAD
-[v1.1.3]: https://github.com/gorcon/rcon/compare/v1.1.2...v1.2.0
+[v1.2.0]: https://github.com/gorcon/rcon/compare/v1.1.2...v1.2.0
 [v1.1.2]: https://github.com/gorcon/rcon/compare/v1.0.0...v1.1.2
