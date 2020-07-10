@@ -12,12 +12,10 @@ import (
 
 const (
 	// DefaultDialTimeout provides default auth timeout to remote server.
-	// TODO: Provide the ability to manage dial timeout.
-	DefaultDialTimeout = 10 * time.Second
+	DefaultDialTimeout = 5 * time.Second
 
-	// DefaultTimeout provides default timeout to tcp read/write operations.
-	// TODO: Provide the ability to manage timeout.
-	DefaultTimeout = 10 * time.Second
+	// DefaultDeadline provides default deadline to tcp read/write operations.
+	DefaultDeadline = 5 * time.Second
 
 	// MaxCommandLen is an artificial restriction, but it will help in case of random
 	// large queries.
@@ -29,9 +27,7 @@ const (
 
 	// SERVERDATA_AUTH_ID is any positive integer, chosen by the client
 	// (will be mirrored back in the server's response).
-	// Conan Exiles has a bug because of which it always responds 42
-	// regardless of the value of the request ID.
-	SERVERDATA_AUTH_ID int32 = 42
+	SERVERDATA_AUTH_ID int32 = 0
 
 	// SERVERDATA_AUTH_RESPONSE packet is a notification of the conn's current auth
 	// status. When the server receives an auth request, it will respond with an empty
@@ -54,9 +50,7 @@ const (
 
 	// SERVERDATA_EXECCOMMAND_ID is any positive integer, chosen by the client
 	// (will be mirrored back in the server's response).
-	// Conan Exiles has a bug because of which it always responds 42
-	// regardless of the value of the request ID.
-	SERVERDATA_EXECCOMMAND_ID int32 = 42
+	SERVERDATA_EXECCOMMAND_ID int32 = 0
 )
 
 var (
@@ -91,29 +85,41 @@ var (
 
 // Conn is source RCON generic stream-oriented network connection.
 type Conn struct {
-	conn net.Conn
+	conn     net.Conn
+	settings Settings
 }
 
 // Dial creates a new authorized Conn tcp dialer connection.
-func Dial(address string, password string) (*Conn, error) {
-	conn, err := net.DialTimeout("tcp", address, DefaultDialTimeout)
+func Dial(address string, password string, options ...Option) (*Conn, error) {
+	settings := DefaultSettings
+
+	for _, option := range options {
+		option(&settings)
+	}
+
+	conn, err := net.DialTimeout("tcp", address, settings.dialTimeout)
 	if err != nil {
 		// Failed to open TCP conn to the server.
 		return nil, err
 	}
 
-	client := &Conn{conn: conn}
-
-	if err := client.auth(password, DefaultDialTimeout); err != nil {
-		// Failed to auth conn with the server.
-		if err2 := client.Close(); err2 != nil {
-			return client, fmt.Errorf("an error occurred while handling another error: %s. Previous error: %s", err2, err)
-		}
-
-		return client, err
+	if settings.deadline != 0 {
+		_ = conn.SetReadDeadline(time.Now().Add(settings.deadline))
+		_ = conn.SetWriteDeadline(time.Now().Add(settings.deadline))
 	}
 
-	return client, nil
+	client := Conn{conn: conn, settings: settings}
+
+	if err := client.auth(password); err != nil {
+		// Failed to auth conn with the server.
+		if err2 := client.Close(); err2 != nil {
+			return &client, fmt.Errorf("an error occurred while handling another error: %s. Previous error: %s", err2, err)
+		}
+
+		return &client, err
+	}
+
+	return &client, nil
 }
 
 // Execute sends command type and it string to execute to the remote server,
@@ -129,12 +135,12 @@ func (c *Conn) Execute(command string) (string, error) {
 		return "", ErrCommandTooLong
 	}
 
-	_, err := c.write(SERVERDATA_EXECCOMMAND, SERVERDATA_EXECCOMMAND_ID, command, DefaultTimeout)
+	_, err := c.write(SERVERDATA_EXECCOMMAND, SERVERDATA_EXECCOMMAND_ID, command)
 	if err != nil {
 		return "", err
 	}
 
-	response, err := c.read(DefaultTimeout)
+	response, err := c.read()
 	if err != nil {
 		return response.Body(), err
 	}
@@ -163,13 +169,13 @@ func (c *Conn) Close() error {
 
 // auth sends SERVERDATA_AUTH request to the remote server and
 // authenticates client for the next requests.
-func (c *Conn) auth(password string, timeout time.Duration) error {
-	_, err := c.write(SERVERDATA_AUTH, SERVERDATA_AUTH_ID, password, timeout)
+func (c *Conn) auth(password string) error {
+	_, err := c.write(SERVERDATA_AUTH, SERVERDATA_AUTH_ID, password)
 	if err != nil {
 		return err
 	}
 
-	response, err := c.readHeader(timeout)
+	response, err := c.readHeader()
 	if err != nil {
 		return err
 	}
@@ -183,7 +189,7 @@ func (c *Conn) auth(password string, timeout time.Duration) error {
 		// Discard empty SERVERDATA_RESPONSE_VALUE from authentication response.
 		_, _ = c.conn.Read(make([]byte, response.Size-PacketHeaderSize))
 
-		if response, err = c.readHeader(timeout); err != nil {
+		if response, err = c.readHeader(); err != nil {
 			return err
 		}
 	}
@@ -210,18 +216,14 @@ func (c *Conn) auth(password string, timeout time.Duration) error {
 }
 
 // Write creates packet and writes it to established tcp conn.
-func (c *Conn) write(packetType int32, packetID int32, command string, timeout time.Duration) (int64, error) {
-	_ = c.conn.SetWriteDeadline(time.Now().Add(timeout))
-
+func (c *Conn) write(packetType int32, packetID int32, command string) (int64, error) {
 	packet := NewPacket(packetType, packetID, command)
 
 	return packet.WriteTo(c.conn)
 }
 
 // readHeader reads structured binary data without body from c.conn into packet.
-func (c *Conn) readHeader(timeout time.Duration) (Packet, error) {
-	_ = c.conn.SetReadDeadline(time.Now().Add(timeout))
-
+func (c *Conn) readHeader() (Packet, error) {
 	var packet Packet
 	if err := binary.Read(c.conn, binary.LittleEndian, &packet.Size); err != nil {
 		return packet, err
@@ -239,9 +241,7 @@ func (c *Conn) readHeader(timeout time.Duration) (Packet, error) {
 }
 
 // read reads structured binary data from c.conn into packet.
-func (c *Conn) read(timeout time.Duration) (*Packet, error) {
-	_ = c.conn.SetReadDeadline(time.Now().Add(timeout))
-
+func (c *Conn) read() (*Packet, error) {
 	packet := &Packet{}
 	if _, err := packet.ReadFrom(c.conn); err != nil {
 		return packet, err

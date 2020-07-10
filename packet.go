@@ -98,6 +98,7 @@ func (packet *Packet) WriteTo(w io.Writer) (n int64, err error) {
 	}
 
 	m, err := buffer.WriteTo(w)
+
 	return n + m, err
 }
 
@@ -107,6 +108,7 @@ func (packet *Packet) ReadFrom(r io.Reader) (n int64, err error) {
 		return n, err
 	}
 	n += 4
+
 	if packet.Size < MinPacketSize {
 		return n, ErrResponseTooSmall
 	}
@@ -125,8 +127,10 @@ func (packet *Packet) ReadFrom(r io.Reader) (n int64, err error) {
 	// response to a SERVERDATA_RESPONSE_VALUE packet.
 	var i int32
 	packet.body = make([]byte, packet.Size-PacketHeaderSize)
+
 	for i < packet.Size-PacketHeaderSize {
 		var m int
+
 		if m, err = r.Read(packet.body[i:]); err != nil {
 			return n + int64(m) + int64(i), err
 		}

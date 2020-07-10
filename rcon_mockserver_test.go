@@ -138,9 +138,17 @@ func (s *MockServer) handle(conn net.Conn) {
 			switch request.Body() {
 			case MockCommandHelp:
 				responseBody = MockCommandHelpResponse
-			case "timeout":
-				time.Sleep(DefaultTimeout + 1*time.Second)
-				responseBody = "timeout"
+			case "deadline":
+				time.Sleep(DefaultDeadline + 1*time.Second)
+				responseBody = request.Body()
+			case "rust":
+				response := NewPacket(4, responseID, responseBody)
+				if err := s.write(conn, responseID, response); err != nil {
+					s.reportError(fmt.Errorf("handle write response error: %s", err))
+					return
+				}
+
+				responseBody = request.Body()
 			default:
 				responseBody = "unknown command"
 			}

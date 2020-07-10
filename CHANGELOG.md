@@ -5,6 +5,15 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [v1.2.0] - 2020-07-10
+### Added
+- Added options to Dial. It is possible to set timeout and deadline settings.
+
+### Fixed
+- Change SERVERDATA_AUTH_ID and SERVERDATA_EXECCOMMAND_ID from 42 to 0. Conan Exiles has a bug because of which it 
+always responds 42 regardless of the value of the request ID. This is no longer relevant, so the values have been 
+changed.
+
 ## [v1.1.2] - 2020-05-13
 ### Added
 - Added go modules (go 1.13).
@@ -16,5 +25,6 @@ All notable changes to this project will be documented in this file.
 ### Added
 - Initial implementation.
 
-[Unreleased]: https://github.com/gorcon/rcon/compare/v1.1.2...HEAD
+[Unreleased]: https://github.com/gorcon/rcon/compare/v1.2.0...HEAD
+[v1.1.3]: https://github.com/gorcon/rcon/compare/v1.1.2...v1.2.0
 [v1.1.2]: https://github.com/gorcon/rcon/compare/v1.0.0...v1.1.2

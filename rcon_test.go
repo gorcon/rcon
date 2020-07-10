@@ -3,6 +3,7 @@ package rcon
 import (
 	"fmt"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 )
@@ -32,7 +33,7 @@ func TestDial(t *testing.T) {
 
 	// Test connection timeout.
 	func() {
-		conn, err := Dial(server.Addr(), "timeout")
+		conn, err := Dial(server.Addr(), "timeout", SetDialTimeout(5*time.Second))
 		if !assert.Error(t, err) {
 			// Close connection if established.
 			assert.NoError(t, conn.Close())
@@ -93,9 +94,9 @@ func TestConn_Execute(t *testing.T) {
 		assert.Equal(t, 0, len(result))
 	}()
 
-	// Test read timeout.
+	// Test read deadline.
 	func() {
-		conn, err := Dial(server.Addr(), MockPassword)
+		conn, err := Dial(server.Addr(), MockPassword, SetDeadline(1*time.Second))
 		if !assert.NoError(t, err) {
 			return
 		}
@@ -103,7 +104,7 @@ func TestConn_Execute(t *testing.T) {
 			assert.NoError(t, conn.Close())
 		}()
 
-		result, err := conn.Execute("timeout")
+		result, err := conn.Execute("deadline")
 		assert.EqualError(t, err, fmt.Sprintf("read tcp %s->%s: i/o timeout", conn.LocalAddr(), conn.RemoteAddr()))
 		assert.Equal(t, 0, len(result))
 	}()
@@ -122,5 +123,21 @@ func TestConn_Execute(t *testing.T) {
 		assert.NoError(t, err)
 		assert.Equal(t, len([]byte(MockCommandHelpResponse)), len(result))
 		assert.Equal(t, MockCommandHelpResponse, result)
+	}()
+
+	// Test Rust.
+	func() {
+		conn, err := Dial(server.Addr(), MockPassword, SetDeadline(1*time.Second))
+		if !assert.NoError(t, err) {
+			return
+		}
+		defer func() {
+			assert.NoError(t, conn.Close())
+		}()
+
+		result, err := conn.Execute("rust")
+		assert.NoError(t, err)
+		assert.Equal(t, len([]byte("rust")), len(result))
+		assert.Equal(t, "rust", result)
 	}()
 }

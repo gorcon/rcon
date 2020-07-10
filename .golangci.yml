@@ -132,3 +132,4 @@ issues:
     - "don't use ALL_CAPS in Go names; use CamelCase" # golint
     - "ST1003: should not use ALL_CAPS in Go names; use CamelCase instead" # stylecheck
     - "shadow: declaration of \"err\"" # govet
+    - "`DefaultSettings` is a global variable" # (gochecknoglobals)
