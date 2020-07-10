@@ -10,9 +10,13 @@ All notable changes to this project will be documented in this file.
 - Added options to Dial. It is possible to set timeout and deadline settings.
 
 ### Fixed
-- Change SERVERDATA_AUTH_ID and SERVERDATA_EXECCOMMAND_ID from 42 to 0. Conan Exiles has a bug because of which it 
+- Change `SERVERDATA_AUTH_ID` and `SERVERDATA_EXECCOMMAND_ID` from 42 to 0. Conan Exiles has a bug because of which it 
 always responds 42 regardless of the value of the request ID. This is no longer relevant, so the values have been 
 changed.
+
+### Changed
+- Renamed `DefaultTimeout` const to `DefaultDeadline`
+- Changed default timeouts from 10 seconds to 5 seconds
 
 ## [v1.1.2] - 2020-05-13
 ### Added
