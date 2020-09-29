@@ -6,6 +6,7 @@ import (
 	"io"
 )
 
+// Packet sizes definitions.
 const (
 	PacketPaddingSize int32 = 2 // Size of Packet's padding.
 	PacketHeaderSize  int32 = 8 // Size of Packet's header.
