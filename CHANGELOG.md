@@ -5,6 +5,9 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### Added
+- Added authentication failed test.
+
 ## [v1.2.0] - 2020-07-10
 ### Added
 - Added options to Dial. It is possible to set timeout and deadline settings.

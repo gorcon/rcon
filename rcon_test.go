@@ -21,34 +21,37 @@ func TestDial(t *testing.T) {
 		}
 	}()
 
-	// Test connection refused.
-	func() {
+	t.Run("connection refused", func(t *testing.T) {
 		conn, err := Dial("127.0.0.2:12345", MockPassword)
 		if !assert.Error(t, err) {
 			// Close connection if established.
 			assert.NoError(t, conn.Close())
 		}
 		assert.EqualError(t, err, "dial tcp 127.0.0.2:12345: connect: connection refused")
-	}()
+	})
 
-	// Test connection timeout.
-	func() {
+	t.Run("connection timeout", func(t *testing.T) {
 		conn, err := Dial(server.Addr(), "timeout", SetDialTimeout(5*time.Second))
 		if !assert.Error(t, err) {
-			// Close connection if established.
 			assert.NoError(t, conn.Close())
 		}
 		assert.EqualError(t, err, fmt.Sprintf("read tcp %s->%s: i/o timeout", conn.LocalAddr(), conn.RemoteAddr()))
-	}()
+	})
 
-	// Test dial auth success.
-	func() {
-		conn, err := Dial(server.Addr(), MockPassword)
-		if assert.NoError(t, err) {
-			// Close connection if established.
+	t.Run("authentication failed", func(t *testing.T) {
+		conn, err := Dial(server.Addr(), "wrong")
+		if !assert.Error(t, err) {
 			assert.NoError(t, conn.Close())
 		}
-	}()
+		assert.EqualError(t, err, "authentication failed")
+	})
+
+	t.Run("auth success", func(t *testing.T) {
+		conn, err := Dial(server.Addr(), MockPassword)
+		if assert.NoError(t, err) {
+			assert.NoError(t, conn.Close())
+		}
+	})
 }
 
 func TestConn_Execute(t *testing.T) {
@@ -64,8 +67,7 @@ func TestConn_Execute(t *testing.T) {
 		}
 	}()
 
-	// Test incorrect command.
-	func() {
+	t.Run("incorrect command", func(t *testing.T) {
 		conn, err := Dial(server.Addr(), MockPassword)
 		if !assert.NoError(t, err) {
 			return
@@ -79,10 +81,9 @@ func TestConn_Execute(t *testing.T) {
 		result, err = conn.Execute(string(make([]byte, 1001)))
 		assert.Equal(t, err, ErrCommandTooLong)
 		assert.Equal(t, 0, len(result))
-	}()
+	})
 
-	// Test use of closed network connection.
-	func() {
+	t.Run("closed network connection", func(t *testing.T) {
 		conn, err := Dial(server.Addr(), MockPassword)
 		if !assert.NoError(t, err) {
 			return
@@ -92,10 +93,9 @@ func TestConn_Execute(t *testing.T) {
 		result, err := conn.Execute(MockCommandHelp)
 		assert.EqualError(t, err, fmt.Sprintf("write tcp %s->%s: use of closed network connection", conn.LocalAddr(), conn.RemoteAddr()))
 		assert.Equal(t, 0, len(result))
-	}()
+	})
 
-	// Test read deadline.
-	func() {
+	t.Run("read deadline", func(t *testing.T) {
 		conn, err := Dial(server.Addr(), MockPassword, SetDeadline(1*time.Second))
 		if !assert.NoError(t, err) {
 			return
@@ -107,10 +107,9 @@ func TestConn_Execute(t *testing.T) {
 		result, err := conn.Execute("deadline")
 		assert.EqualError(t, err, fmt.Sprintf("read tcp %s->%s: i/o timeout", conn.LocalAddr(), conn.RemoteAddr()))
 		assert.Equal(t, 0, len(result))
-	}()
+	})
 
-	// Test success command help.
-	func() {
+	t.Run("success help command", func(t *testing.T) {
 		conn, err := Dial(server.Addr(), MockPassword)
 		if !assert.NoError(t, err) {
 			return
@@ -123,10 +122,9 @@ func TestConn_Execute(t *testing.T) {
 		assert.NoError(t, err)
 		assert.Equal(t, len([]byte(MockCommandHelpResponse)), len(result))
 		assert.Equal(t, MockCommandHelpResponse, result)
-	}()
+	})
 
-	// Test Rust.
-	func() {
+	t.Run("rust workaround", func(t *testing.T) {
 		conn, err := Dial(server.Addr(), MockPassword, SetDeadline(1*time.Second))
 		if !assert.NoError(t, err) {
 			return
@@ -139,5 +137,5 @@ func TestConn_Execute(t *testing.T) {
 		assert.NoError(t, err)
 		assert.Equal(t, len([]byte("rust")), len(result))
 		assert.Equal(t, "rust", result)
-	}()
+	})
 }

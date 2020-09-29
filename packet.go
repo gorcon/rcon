@@ -15,7 +15,7 @@ const (
 )
 
 // Packet is a rcon packet. Both requests and responses are sent as
-// TCP packets. Their payload follows the following basic structure
+// TCP packets. Their payload follows the following basic structure.
 type Packet struct {
 	// The packet size field is a 32-bit little endian integer, representing
 	// the length of the request in bytes. Note that the packet size field

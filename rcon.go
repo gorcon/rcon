@@ -81,6 +81,10 @@ var (
 
 	// ErrCommandEmpty is returned when executed command length equal 0.
 	ErrCommandEmpty = errors.New("command too small")
+
+	// ErrMultiErrorOccurred is returned when close connection failed with
+	// error after auth failed.
+	ErrMultiErrorOccurred = errors.New("an error occurred while handling another error")
 )
 
 // Conn is source RCON generic stream-oriented network connection.
@@ -113,7 +117,7 @@ func Dial(address string, password string, options ...Option) (*Conn, error) {
 	if err := client.auth(password); err != nil {
 		// Failed to auth conn with the server.
 		if err2 := client.Close(); err2 != nil {
-			return &client, fmt.Errorf("an error occurred while handling another error: %s. Previous error: %s", err2, err)
+			return &client, fmt.Errorf("%w: %v. Previous error: %v", ErrMultiErrorOccurred, err2, err)
 		}
 
 		return &client, err
