@@ -4,9 +4,11 @@ All notable changes to this project will be documented in this file.
 **ATTN**: This project uses [semantic versioning](http://semver.org/).
 
 ## [Unreleased]
-
 ### Added
 - Added authentication failed test.
+
+### Changed
+- Updated Golang version to 1.15.
 
 ## [v1.2.0] - 2020-07-10
 ### Added

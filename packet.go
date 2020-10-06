@@ -81,16 +81,19 @@ func (packet *Packet) WriteTo(w io.Writer) (n int64, err error) {
 	if err := binary.Write(buffer, binary.LittleEndian, packet.Size); err != nil {
 		return 0, err
 	}
+
 	n += 4
 
 	if err := binary.Write(buffer, binary.LittleEndian, packet.ID); err != nil {
 		return n, err
 	}
+
 	n += 4
 
 	if err := binary.Write(buffer, binary.LittleEndian, packet.Type); err != nil {
 		return n, err
 	}
+
 	n += 4
 
 	// Write command body, null terminated ASCII string and an empty ASCIIZ string.
@@ -108,6 +111,7 @@ func (packet *Packet) ReadFrom(r io.Reader) (n int64, err error) {
 	if err := binary.Read(r, binary.LittleEndian, &packet.Size); err != nil {
 		return n, err
 	}
+
 	n += 4
 
 	if packet.Size < MinPacketSize {
@@ -117,32 +121,37 @@ func (packet *Packet) ReadFrom(r io.Reader) (n int64, err error) {
 	if err := binary.Read(r, binary.LittleEndian, &packet.ID); err != nil {
 		return n, err
 	}
+
 	n += 4
 
 	if err := binary.Read(r, binary.LittleEndian, &packet.Type); err != nil {
 		return n, err
 	}
+
 	n += 4
 
 	// String can actually include null characters which is the case in
 	// response to a SERVERDATA_RESPONSE_VALUE packet.
-	var i int32
 	packet.body = make([]byte, packet.Size-PacketHeaderSize)
 
+	var i int32
 	for i < packet.Size-PacketHeaderSize {
 		var m int
 
 		if m, err = r.Read(packet.body[i:]); err != nil {
 			return n + int64(m) + int64(i), err
 		}
+
 		i += int32(m)
 	}
+
 	n += int64(i)
 
 	// Remove null terminated strings from response body.
 	if !bytes.Equal(packet.body[len(packet.body)-int(PacketPaddingSize):], []byte{0x00, 0x00}) {
 		return n, ErrInvalidPacketPadding
 	}
+
 	packet.body = packet.body[0 : len(packet.body)-int(PacketPaddingSize)]
 
 	return n, nil
