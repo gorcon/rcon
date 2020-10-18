@@ -5,6 +5,12 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [v1.2.2] - 2020-10-18
+### Added
+- Added one more workaround for Rust server. When sent command "Say" there is no response data from server 
+with packet.ID = SERVERDATA_EXECCOMMAND_ID, only previous console message that command was received with 
+packet.ID = -1, therefore, forcibly set packet.ID to SERVERDATA_EXECCOMMAND_ID.
+
 ## [v1.2.1] - 2020-10-06
 ### Added
 - Added authentication failed test.
@@ -36,7 +42,8 @@ changed.
 ### Added
 - Initial implementation.
 
-[Unreleased]: https://github.com/gorcon/rcon/compare/v1.2.1...HEAD
+[Unreleased]: https://github.com/gorcon/rcon/compare/v1.2.2...HEAD
+[v1.2.1]: https://github.com/gorcon/rcon/compare/v1.2.1...v1.2.2
 [v1.2.1]: https://github.com/gorcon/rcon/compare/v1.2.0...v1.2.1
 [v1.2.0]: https://github.com/gorcon/rcon/compare/v1.1.2...v1.2.0
 [v1.1.2]: https://github.com/gorcon/rcon/compare/v1.0.0...v1.1.2

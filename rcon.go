@@ -251,12 +251,21 @@ func (c *Conn) read() (*Packet, error) {
 		return packet, err
 	}
 
-	// Workaround for Rust server. Rust rcon server responses packet with a
-	// type of 4 and the next packet is valid. It is undocumented, so skip
-	// packet and read next.
+	// Workaround for Rust server.
+	// Rust rcon server responses packet with a type of 4 and the next packet
+	// is valid. It is undocumented, so skip packet and read next.
 	if packet.Type == 4 {
 		if _, err := packet.ReadFrom(c.conn); err != nil {
 			return packet, err
+		}
+
+		// One more workaround for Rust server.
+		// When sent command "Say" there is no response data from server with
+		// packet.ID = SERVERDATA_EXECCOMMAND_ID, only previous console message
+		// that command was received with packet.ID = -1, therefore, forcibly
+		// set packet.ID to SERVERDATA_EXECCOMMAND_ID.
+		if packet.ID == -1 {
+			packet.ID = SERVERDATA_EXECCOMMAND_ID
 		}
 	}
 
