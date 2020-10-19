@@ -40,7 +40,7 @@ import (
 )
 
 func main() {
-	conn, err := rcon.Dial("127.0.01:16260", "password")
+	conn, err := rcon.Dial("127.0.0.1:16260", "password")
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -57,7 +57,7 @@ func main() {
 
 ## Requirements
 
-Go 1.13 or higher
+Go 1.15 or higher
 
 ## Contribute
 
