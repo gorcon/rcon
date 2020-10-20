@@ -5,6 +5,11 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [v1.2.3] - 2020-10-20
+### Fixed
+- Fixed read/write deadline. The deadline was started from the moment the connection was established and was not updated 
+after the command was sent.
+
 ## [v1.2.2] - 2020-10-18
 ### Added
 - Added one more workaround for Rust server. When sent command "Say" there is no response data from server 
@@ -42,7 +47,8 @@ changed.
 ### Added
 - Initial implementation.
 
-[Unreleased]: https://github.com/gorcon/rcon/compare/v1.2.2...HEAD
+[Unreleased]: https://github.com/gorcon/rcon/compare/v1.2.3...HEAD
+[v1.2.3]: https://github.com/gorcon/rcon/compare/v1.2.2...v1.2.3
 [v1.2.2]: https://github.com/gorcon/rcon/compare/v1.2.1...v1.2.2
 [v1.2.1]: https://github.com/gorcon/rcon/compare/v1.2.0...v1.2.1
 [v1.2.0]: https://github.com/gorcon/rcon/compare/v1.1.2...v1.2.0

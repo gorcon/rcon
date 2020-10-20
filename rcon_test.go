@@ -83,8 +83,8 @@ func TestConn_Execute(t *testing.T) {
 		assert.Equal(t, 0, len(result))
 	})
 
-	t.Run("closed network connection", func(t *testing.T) {
-		conn, err := Dial(server.Addr(), MockPassword)
+	t.Run("closed network connection 1", func(t *testing.T) {
+		conn, err := Dial(server.Addr(), MockPassword, SetDeadline(0))
 		if !assert.NoError(t, err) {
 			return
 		}
@@ -92,6 +92,18 @@ func TestConn_Execute(t *testing.T) {
 
 		result, err := conn.Execute(MockCommandHelp)
 		assert.EqualError(t, err, fmt.Sprintf("write tcp %s->%s: use of closed network connection", conn.LocalAddr(), conn.RemoteAddr()))
+		assert.Equal(t, 0, len(result))
+	})
+
+	t.Run("closed network connection 2", func(t *testing.T) {
+		conn, err := Dial(server.Addr(), MockPassword)
+		if !assert.NoError(t, err) {
+			return
+		}
+		assert.NoError(t, conn.Close())
+
+		result, err := conn.Execute(MockCommandHelp)
+		assert.EqualError(t, err, fmt.Sprintf("set tcp %s: use of closed network connection", conn.LocalAddr()))
 		assert.Equal(t, 0, len(result))
 	})
 

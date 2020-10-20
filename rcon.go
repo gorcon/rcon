@@ -103,13 +103,8 @@ func Dial(address string, password string, options ...Option) (*Conn, error) {
 
 	conn, err := net.DialTimeout("tcp", address, settings.dialTimeout)
 	if err != nil {
-		// Failed to open TCP conn to the server.
+		// Failed to open TCP connection to the server.
 		return nil, err
-	}
-
-	if settings.deadline != 0 {
-		_ = conn.SetReadDeadline(time.Now().Add(settings.deadline))
-		_ = conn.SetWriteDeadline(time.Now().Add(settings.deadline))
 	}
 
 	client := Conn{conn: conn, settings: settings}
@@ -139,8 +134,7 @@ func (c *Conn) Execute(command string) (string, error) {
 		return "", ErrCommandTooLong
 	}
 
-	_, err := c.write(SERVERDATA_EXECCOMMAND, SERVERDATA_EXECCOMMAND_ID, command)
-	if err != nil {
+	if err := c.write(SERVERDATA_EXECCOMMAND, SERVERDATA_EXECCOMMAND_ID, command); err != nil {
 		return "", err
 	}
 
@@ -174,9 +168,14 @@ func (c *Conn) Close() error {
 // auth sends SERVERDATA_AUTH request to the remote server and
 // authenticates client for the next requests.
 func (c *Conn) auth(password string) error {
-	_, err := c.write(SERVERDATA_AUTH, SERVERDATA_AUTH_ID, password)
-	if err != nil {
+	if err := c.write(SERVERDATA_AUTH, SERVERDATA_AUTH_ID, password); err != nil {
 		return err
+	}
+
+	if c.settings.deadline != 0 {
+		if err := c.conn.SetReadDeadline(time.Now().Add(c.settings.deadline)); err != nil {
+			return err
+		}
 	}
 
 	response, err := c.readHeader()
@@ -219,33 +218,28 @@ func (c *Conn) auth(password string) error {
 	return nil
 }
 
-// Write creates packet and writes it to established tcp conn.
-func (c *Conn) write(packetType int32, packetID int32, command string) (int64, error) {
+// write creates packet and writes it to established tcp conn.
+func (c *Conn) write(packetType int32, packetID int32, command string) error {
+	if c.settings.deadline != 0 {
+		if err := c.conn.SetWriteDeadline(time.Now().Add(c.settings.deadline)); err != nil {
+			return err
+		}
+	}
+
 	packet := NewPacket(packetType, packetID, command)
+	_, err := packet.WriteTo(c.conn)
 
-	return packet.WriteTo(c.conn)
-}
-
-// readHeader reads structured binary data without body from c.conn into packet.
-func (c *Conn) readHeader() (Packet, error) {
-	var packet Packet
-	if err := binary.Read(c.conn, binary.LittleEndian, &packet.Size); err != nil {
-		return packet, err
-	}
-
-	if err := binary.Read(c.conn, binary.LittleEndian, &packet.ID); err != nil {
-		return packet, err
-	}
-
-	if err := binary.Read(c.conn, binary.LittleEndian, &packet.Type); err != nil {
-		return packet, err
-	}
-
-	return packet, nil
+	return err
 }
 
 // read reads structured binary data from c.conn into packet.
 func (c *Conn) read() (*Packet, error) {
+	if c.settings.deadline != 0 {
+		if err := c.conn.SetReadDeadline(time.Now().Add(c.settings.deadline)); err != nil {
+			return nil, err
+		}
+	}
+
 	packet := &Packet{}
 	if _, err := packet.ReadFrom(c.conn); err != nil {
 		return packet, err
@@ -267,6 +261,24 @@ func (c *Conn) read() (*Packet, error) {
 		if packet.ID == -1 {
 			packet.ID = SERVERDATA_EXECCOMMAND_ID
 		}
+	}
+
+	return packet, nil
+}
+
+// readHeader reads structured binary data without body from c.conn into packet.
+func (c *Conn) readHeader() (Packet, error) {
+	var packet Packet
+	if err := binary.Read(c.conn, binary.LittleEndian, &packet.Size); err != nil {
+		return packet, err
+	}
+
+	if err := binary.Read(c.conn, binary.LittleEndian, &packet.ID); err != nil {
+		return packet, err
+	}
+
+	if err := binary.Read(c.conn, binary.LittleEndian, &packet.Type); err != nil {
+		return packet, err
 	}
 
 	return packet, nil
