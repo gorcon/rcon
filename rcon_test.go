@@ -1,14 +1,14 @@
 package rcon
 
 import (
+	"encoding/json"
 	"fmt"
 	"os"
+	"strings"
 	"testing"
 	"time"
 
-	"encoding/json"
 	"github.com/stretchr/testify/assert"
-	"strings"
 )
 
 func TestDial(t *testing.T) {

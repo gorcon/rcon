@@ -155,11 +155,7 @@ func (s *MockServer) handle(conn net.Conn) {
 
 				responseBody = request.Body()
 			case "padding":
-				response := NewPacket(responseType, responseID, responseBody)
-				if err := s.writeWithInvalidPadding(conn, responseID, response); err != nil {
-					s.reportError(fmt.Errorf("handle write response error: %s", err))
-				}
-
+				_ = s.writeWithInvalidPadding(conn, responseID, NewPacket(responseType, responseID, responseBody))
 				return
 			default:
 				responseBody = "unknown command"
