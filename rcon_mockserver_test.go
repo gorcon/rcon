@@ -1,6 +1,8 @@
 package rcon
 
 import (
+	"bytes"
+	"encoding/binary"
 	"fmt"
 	"io"
 	"net"
@@ -125,7 +127,6 @@ func (s *MockServer) handle(conn net.Conn) {
 
 		switch request.Type {
 		case SERVERDATA_AUTH:
-			responseType = SERVERDATA_AUTH_RESPONSE
 			if request.Body() != MockPassword {
 				if request.Body() == "timeout" {
 					time.Sleep(DefaultDialTimeout + 1*time.Second)
@@ -133,7 +134,11 @@ func (s *MockServer) handle(conn net.Conn) {
 				// If authentication was failed, the ID must be assigned to -1.
 				responseID = -1
 				responseBody = string([]byte{0x00})
+			} else {
+				_ = s.write(conn, responseID, NewPacket(responseType, responseID, responseBody))
 			}
+
+			responseType = SERVERDATA_AUTH_RESPONSE
 		case SERVERDATA_EXECCOMMAND:
 			switch request.Body() {
 			case MockCommandHelp:
@@ -149,6 +154,13 @@ func (s *MockServer) handle(conn net.Conn) {
 				}
 
 				responseBody = request.Body()
+			case "padding":
+				response := NewPacket(responseType, responseID, responseBody)
+				if err := s.writeWithInvalidPadding(conn, responseID, response); err != nil {
+					s.reportError(fmt.Errorf("handle write response error: %s", err))
+				}
+
+				return
 			default:
 				responseBody = "unknown command"
 			}
@@ -180,6 +192,38 @@ func (s *MockServer) write(conn net.Conn, id int32, packets ...*Packet) error {
 		if err != nil {
 			return err
 		}
+	}
+
+	return nil
+}
+
+func (s *MockServer) writeWithInvalidPadding(conn net.Conn, id int32, packets ...*Packet) error {
+	for _, packet := range packets {
+		packet.ID = id
+
+		buffer := bytes.NewBuffer(make([]byte, 0, packet.Size+4))
+
+		if err := binary.Write(buffer, binary.LittleEndian, packet.Size); err != nil {
+			return err
+		}
+
+		if err := binary.Write(buffer, binary.LittleEndian, packet.ID); err != nil {
+			return err
+		}
+
+		if err := binary.Write(buffer, binary.LittleEndian, packet.Type); err != nil {
+			return err
+		}
+
+		// Write command body, null terminated ASCII string and an empty ASCIIZ string.
+		// Second padding byte is incorrect.
+		if _, err := buffer.Write(append(packet.body, 0x00, 0x01)); err != nil {
+			return err
+		}
+
+		_, err := buffer.WriteTo(conn)
+
+		return err
 	}
 
 	return nil

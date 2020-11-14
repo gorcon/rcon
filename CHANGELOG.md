@@ -5,6 +5,19 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [v1.2.4] - 2020-11-14
+### Added
+- Added the ability to run tests on a real Project Zomboid server. To do this, set environment variables 
+`TEST_PZ_SERVER=true`, `TEST_PZ_SERVER_ADDR` and `TEST_PZ_SERVER_PASSWORD` with address and password from Project Zomboid
+remote console.  
+- Added the ability to run tests on a real Rust server. To do this, set environment variables `TEST_RUST_SERVER=true`, 
+`TEST_RUST_SERVER_ADDR` and `TEST_RUST_SERVER_PASSWORD` with address and password from Rust remote console.  
+- Added invalid padding test.
+
+### Changed
+- Changed CI workflows and related badges. Integration with Travis-CI was changed to GitHub actions workflow. Golangci-lint 
+job was joined with tests workflow.  
+
 ## [v1.2.3] - 2020-10-20
 ### Fixed
 - Fixed read/write deadline. The deadline was started from the moment the connection was established and was not updated 
@@ -47,7 +60,8 @@ changed.
 ### Added
 - Initial implementation.
 
-[Unreleased]: https://github.com/gorcon/rcon/compare/v1.2.3...HEAD
+[Unreleased]: https://github.com/gorcon/rcon/compare/v1.2.4...HEAD
+[v1.2.4]: https://github.com/gorcon/rcon/compare/v1.2.3...v1.2.4
 [v1.2.3]: https://github.com/gorcon/rcon/compare/v1.2.2...v1.2.3
 [v1.2.2]: https://github.com/gorcon/rcon/compare/v1.2.1...v1.2.2
 [v1.2.1]: https://github.com/gorcon/rcon/compare/v1.2.0...v1.2.1

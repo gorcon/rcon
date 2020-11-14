@@ -1,8 +1,7 @@
 # Rcon
-[![golangci-lint](https://github.com/gorcon/rcon/workflows/golangci-lint/badge.svg)](https://github.com/gorcon/rcon/actions)
-[![Go Report Card](https://goreportcard.com/badge/github.com/gorcon/rcon)](https://goreportcard.com/report/github.com/gorcon/rcon)
-[![Build Status](https://travis-ci.org/gorcon/rcon.svg?branch=master)](https://travis-ci.org/gorcon/rcon)
+[![GitHub Build](https://github.com/gorcon/rcon/workflows/build/badge.svg)](https://github.com/gorcon/rcon/actions)
 [![Coverage](https://gocover.io/_badge/github.com/gorcon/rcon?0 "coverage")](https://gocover.io/github.com/gorcon/rcon)
+[![Go Report Card](https://goreportcard.com/badge/github.com/gorcon/rcon)](https://goreportcard.com/report/github.com/gorcon/rcon)
 [![GoDoc](https://img.shields.io/badge/godoc-reference-blue.svg)](https://godoc.org/github.com/gorcon/rcon)
 
 Source RCON Protocol implementation in Go.
