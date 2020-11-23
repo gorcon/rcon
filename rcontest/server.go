@@ -15,6 +15,7 @@ import (
 // Server is an RCON server listening on a system-chosen port on the
 // local loopback interface, for use in end-to-end RCON tests.
 type Server struct {
+	settings    Settings
 	addr        string
 	listener    net.Listener
 	handler     Handler
@@ -36,9 +37,8 @@ func newLocalListener() net.Listener {
 
 // NewServer returns a running RCON Server or nil if an error occurred.
 // The caller should call Close when finished, to shut it down.
-func NewServer(handler HandlerFunc) *Server {
-	server := NewUnstartedServer(handler)
-
+func NewServer(handler HandlerFunc, options ...Option) *Server {
+	server := NewUnstartedServer(handler, options...)
 	server.Start()
 
 	return server
@@ -47,19 +47,23 @@ func NewServer(handler HandlerFunc) *Server {
 // NewUnstartedServer returns a new Server but doesn't start it.
 // After changing its configuration, the caller should call Start.
 // The caller should call Close when finished, to shut it down.
-func NewUnstartedServer(handler HandlerFunc) *Server {
+func NewUnstartedServer(handler HandlerFunc, options ...Option) *Server {
 	if handler == nil {
-		handler = commandHandler
+		handler = defaultCommandHandler
 	}
 
 	server := Server{
 		listener: newLocalListener(),
 		handler: Handler{
-			auth:    authHandler,
+			auth:    defaultAuthHandler,
 			command: handler,
 		},
 		connections: make(map[net.Conn]struct{}),
 		quit:        make(chan bool),
+	}
+
+	for _, option := range options {
+		option(&server)
 	}
 
 	return &server
@@ -72,7 +76,6 @@ func (s *Server) Start() {
 	}
 
 	s.addr = s.listener.Addr().String()
-
 	s.goServe()
 }
 
@@ -83,9 +86,7 @@ func (s *Server) Close() {
 	}
 
 	s.closed = true
-
 	close(s.quit)
-
 	s.listener.Close()
 
 	// Waiting for server connections.

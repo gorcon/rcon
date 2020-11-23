@@ -1,8 +1,11 @@
 package rcon_test
 
 import (
+	"bytes"
+	"encoding/binary"
 	"encoding/json"
 	"fmt"
+	"io"
 	"os"
 	"strings"
 	"testing"
@@ -13,8 +16,64 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+func commandHandler(s *rcontest.Server, conn io.Writer, request *rcon.Packet) {
+	writeWithInvalidPadding := func(conn io.Writer, packet *rcon.Packet) error {
+		buffer := bytes.NewBuffer(make([]byte, 0, packet.Size+4))
+
+		if err := binary.Write(buffer, binary.LittleEndian, packet.Size); err != nil {
+			return err
+		}
+
+		if err := binary.Write(buffer, binary.LittleEndian, packet.ID); err != nil {
+			return err
+		}
+
+		if err := binary.Write(buffer, binary.LittleEndian, packet.Type); err != nil {
+			return err
+		}
+
+		// Write command body, null terminated ASCII string and an empty ASCIIZ string.
+		// Second padding byte is incorrect.
+		if _, err := buffer.Write(append([]byte(packet.Body()), 0x00, 0x01)); err != nil {
+			return err
+		}
+
+		if _, err := buffer.WriteTo(conn); err != nil {
+			return err
+		}
+
+		return nil
+	}
+
+	var responseBody string
+
+	switch request.Body() {
+	case "help":
+		responseBody = "lorem ipsum dolor sit amet"
+	case "deadline":
+		time.Sleep(rcon.DefaultDeadline + 1*time.Second)
+
+		responseBody = request.Body()
+	case "rust":
+		// Write specific Rust package.
+		if _, err := rcon.NewPacket(4, request.ID, responseBody).WriteTo(conn); err != nil {
+			return
+		}
+
+		responseBody = request.Body()
+	case "padding":
+		_ = writeWithInvalidPadding(conn, rcon.NewPacket(rcon.SERVERDATA_RESPONSE_VALUE, request.ID, ""))
+
+		return
+	default:
+		responseBody = "unknown command"
+	}
+
+	_, _ = rcon.NewPacket(rcon.SERVERDATA_RESPONSE_VALUE, request.ID, responseBody).WriteTo(conn)
+}
+
 func TestDial(t *testing.T) {
-	server := rcontest.NewServer(nil)
+	server := rcontest.NewServer(nil, rcontest.SetSettings(rcontest.Settings{Password: "password"}))
 	defer server.Close()
 
 	t.Run("connection refused", func(t *testing.T) {
@@ -27,7 +86,10 @@ func TestDial(t *testing.T) {
 	})
 
 	t.Run("connection timeout", func(t *testing.T) {
-		conn, err := rcon.Dial(server.Addr(), "timeout", rcon.SetDialTimeout(5*time.Second))
+		server := rcontest.NewServer(nil, rcontest.SetSettings(rcontest.Settings{Password: "password", AuthResponseDelay: 6 * time.Second}))
+		defer server.Close()
+
+		conn, err := rcon.Dial(server.Addr(), "", rcon.SetDialTimeout(5*time.Second))
 		if !assert.Error(t, err) {
 			assert.NoError(t, conn.Close())
 		}
@@ -51,7 +113,7 @@ func TestDial(t *testing.T) {
 }
 
 func TestConn_Execute(t *testing.T) {
-	server := rcontest.NewServer(nil)
+	server := rcontest.NewServer(commandHandler, rcontest.SetSettings(rcontest.Settings{Password: "password"}))
 	defer server.Close()
 
 	t.Run("incorrect command", func(t *testing.T) {
