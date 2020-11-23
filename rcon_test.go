@@ -14,11 +14,11 @@ import (
 )
 
 func TestDial(t *testing.T) {
-	server := rcontest.MustNewServer()
-	defer server.MustClose()
+	server := rcontest.NewServer(nil)
+	defer server.Close()
 
 	t.Run("connection refused", func(t *testing.T) {
-		conn, err := rcon.Dial("127.0.0.2:12345", rcontest.MockPasswordRCON)
+		conn, err := rcon.Dial("127.0.0.2:12345", "password")
 		if !assert.Error(t, err) {
 			// Close connection if established.
 			assert.NoError(t, conn.Close())
@@ -43,7 +43,7 @@ func TestDial(t *testing.T) {
 	})
 
 	t.Run("auth success", func(t *testing.T) {
-		conn, err := rcon.Dial(server.Addr(), rcontest.MockPasswordRCON)
+		conn, err := rcon.Dial(server.Addr(), "password")
 		if assert.NoError(t, err) {
 			assert.NoError(t, conn.Close())
 		}
@@ -51,11 +51,11 @@ func TestDial(t *testing.T) {
 }
 
 func TestConn_Execute(t *testing.T) {
-	server := rcontest.MustNewServer()
-	defer server.MustClose()
+	server := rcontest.NewServer(nil)
+	defer server.Close()
 
 	t.Run("incorrect command", func(t *testing.T) {
-		conn, err := rcon.Dial(server.Addr(), rcontest.MockPasswordRCON)
+		conn, err := rcon.Dial(server.Addr(), "password")
 		if !assert.NoError(t, err) {
 			return
 		}
@@ -71,7 +71,7 @@ func TestConn_Execute(t *testing.T) {
 	})
 
 	t.Run("closed network connection 1", func(t *testing.T) {
-		conn, err := rcon.Dial(server.Addr(), rcontest.MockPasswordRCON, rcon.SetDeadline(0))
+		conn, err := rcon.Dial(server.Addr(), "password", rcon.SetDeadline(0))
 		if !assert.NoError(t, err) {
 			return
 		}
@@ -83,7 +83,7 @@ func TestConn_Execute(t *testing.T) {
 	})
 
 	t.Run("closed network connection 2", func(t *testing.T) {
-		conn, err := rcon.Dial(server.Addr(), rcontest.MockPasswordRCON)
+		conn, err := rcon.Dial(server.Addr(), "password")
 		if !assert.NoError(t, err) {
 			return
 		}
@@ -95,7 +95,7 @@ func TestConn_Execute(t *testing.T) {
 	})
 
 	t.Run("read deadline", func(t *testing.T) {
-		conn, err := rcon.Dial(server.Addr(), rcontest.MockPasswordRCON, rcon.SetDeadline(1*time.Second))
+		conn, err := rcon.Dial(server.Addr(), "password", rcon.SetDeadline(1*time.Second))
 		if !assert.NoError(t, err) {
 			return
 		}
@@ -110,7 +110,7 @@ func TestConn_Execute(t *testing.T) {
 	})
 
 	t.Run("invalid padding", func(t *testing.T) {
-		conn, err := rcon.Dial(server.Addr(), rcontest.MockPasswordRCON)
+		conn, err := rcon.Dial(server.Addr(), "password")
 		if !assert.NoError(t, err) {
 			return
 		}
@@ -123,7 +123,7 @@ func TestConn_Execute(t *testing.T) {
 	})
 
 	t.Run("success help command", func(t *testing.T) {
-		conn, err := rcon.Dial(server.Addr(), rcontest.MockPasswordRCON)
+		conn, err := rcon.Dial(server.Addr(), "password")
 		if !assert.NoError(t, err) {
 			return
 		}
@@ -138,7 +138,7 @@ func TestConn_Execute(t *testing.T) {
 	})
 
 	t.Run("rust workaround", func(t *testing.T) {
-		conn, err := rcon.Dial(server.Addr(), rcontest.MockPasswordRCON, rcon.SetDeadline(1*time.Second))
+		conn, err := rcon.Dial(server.Addr(), "password", rcon.SetDeadline(1*time.Second))
 		if !assert.NoError(t, err) {
 			return
 		}
