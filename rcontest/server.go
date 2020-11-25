@@ -144,11 +144,11 @@ func (s *Server) Addr() string {
 
 // NewContext returns a Context instance.
 func (s *Server) NewContext(conn net.Conn) (*Context, error) {
-	context := Context{server: s, conn: conn, request: &rcon.Packet{}}
+	ctx := Context{server: s, conn: conn, request: &rcon.Packet{}}
 
-	_, err := context.request.ReadFrom(conn)
+	_, err := ctx.request.ReadFrom(conn)
 
-	return &context, err
+	return &ctx, err
 }
 
 // serve handles incoming requests until a stop signal is given with Close.
