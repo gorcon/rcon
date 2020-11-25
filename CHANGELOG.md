@@ -4,6 +4,8 @@ All notable changes to this project will be documented in this file.
 **ATTN**: This project uses [semantic versioning](http://semver.org/).
 
 ## [Unreleased]
+### Added
+- Added rcontest Server for mocking RCON connections.
 
 ## [v1.2.4] - 2020-11-14
 ### Added

@@ -8,6 +8,7 @@ import (
 	"io"
 	"net"
 	"sync"
+	"time"
 
 	"github.com/gorcon/rcon"
 )
@@ -15,15 +16,47 @@ import (
 // Server is an RCON server listening on a system-chosen port on the
 // local loopback interface, for use in end-to-end RCON tests.
 type Server struct {
-	settings    Settings
-	addr        string
-	listener    net.Listener
-	handler     Handler
-	connections map[net.Conn]struct{}
-	quit        chan bool
-	wg          sync.WaitGroup
-	mu          sync.Mutex
-	closed      bool
+	Settings       Settings
+	Listener       net.Listener
+	addr           string
+	authHandler    HandlerFunc
+	commandHandler HandlerFunc
+	connections    map[net.Conn]struct{}
+	quit           chan bool
+	wg             sync.WaitGroup
+	mu             sync.Mutex
+	closed         bool
+}
+
+// Settings contains configuration for RCON Server.
+type Settings struct {
+	Password             string
+	AuthResponseDelay    time.Duration
+	CommandResponseDelay time.Duration
+}
+
+// HandlerFunc defines a function to serve RCON requests.
+type HandlerFunc func(c *Context)
+
+// AuthHandler checks authorisation data and responses with
+// SERVERDATA_AUTH_RESPONSE packet.
+func AuthHandler(c *Context) {
+	if c.Request().Body() == c.Server().Settings.Password {
+		// First write SERVERDATA_RESPONSE_VALUE packet with empty body.
+		_, _ = rcon.NewPacket(rcon.SERVERDATA_RESPONSE_VALUE, c.Request().ID, "").WriteTo(c.Conn())
+
+		// Than write SERVERDATA_AUTH_RESPONSE packet to allow authHandler success.
+		_, _ = rcon.NewPacket(rcon.SERVERDATA_AUTH_RESPONSE, c.Request().ID, "").WriteTo(c.Conn())
+	} else {
+		// If authentication was failed, the ID must be assigned to -1.
+		_, _ = rcon.NewPacket(rcon.SERVERDATA_AUTH_RESPONSE, -1, string([]byte{0x00})).WriteTo(c.Conn())
+	}
+}
+
+// EmptyHandler responses with empty body. Is used when start RCON Server with nil
+// commandHandler.
+func EmptyHandler(c *Context) {
+	_, _ = rcon.NewPacket(rcon.SERVERDATA_RESPONSE_VALUE, c.Request().ID, "").WriteTo(c.Conn())
 }
 
 func newLocalListener() net.Listener {
@@ -37,8 +70,8 @@ func newLocalListener() net.Listener {
 
 // NewServer returns a running RCON Server or nil if an error occurred.
 // The caller should call Close when finished, to shut it down.
-func NewServer(handler HandlerFunc, options ...Option) *Server {
-	server := NewUnstartedServer(handler, options...)
+func NewServer(options ...Option) *Server {
+	server := NewUnstartedServer(options...)
 	server.Start()
 
 	return server
@@ -47,19 +80,13 @@ func NewServer(handler HandlerFunc, options ...Option) *Server {
 // NewUnstartedServer returns a new Server but doesn't start it.
 // After changing its configuration, the caller should call Start.
 // The caller should call Close when finished, to shut it down.
-func NewUnstartedServer(handler HandlerFunc, options ...Option) *Server {
-	if handler == nil {
-		handler = defaultCommandHandler
-	}
-
+func NewUnstartedServer(options ...Option) *Server {
 	server := Server{
-		listener: newLocalListener(),
-		handler: Handler{
-			auth:    defaultAuthHandler,
-			command: handler,
-		},
-		connections: make(map[net.Conn]struct{}),
-		quit:        make(chan bool),
+		Listener:       newLocalListener(),
+		authHandler:    AuthHandler,
+		commandHandler: EmptyHandler,
+		connections:    make(map[net.Conn]struct{}),
+		quit:           make(chan bool),
 	}
 
 	for _, option := range options {
@@ -69,13 +96,23 @@ func NewUnstartedServer(handler HandlerFunc, options ...Option) *Server {
 	return &server
 }
 
+// SetAuthHandler injects HandlerFunc with authorisation data checking.
+func (s *Server) SetAuthHandler(handler HandlerFunc) {
+	s.authHandler = handler
+}
+
+// SetCommandHandler injects HandlerFunc with commands processing.
+func (s *Server) SetCommandHandler(handler HandlerFunc) {
+	s.commandHandler = handler
+}
+
 // Start starts a server from NewUnstartedServer.
 func (s *Server) Start() {
 	if s.addr != "" {
 		panic("server already started")
 	}
 
-	s.addr = s.listener.Addr().String()
+	s.addr = s.Listener.Addr().String()
 	s.goServe()
 }
 
@@ -87,7 +124,7 @@ func (s *Server) Close() {
 
 	s.closed = true
 	close(s.quit)
-	s.listener.Close()
+	s.Listener.Close()
 
 	// Waiting for server connections.
 	s.wg.Wait()
@@ -105,10 +142,19 @@ func (s *Server) Addr() string {
 	return s.addr
 }
 
+// NewContext returns a Context instance.
+func (s *Server) NewContext(conn net.Conn) (*Context, error) {
+	context := Context{server: s, conn: conn, request: &rcon.Packet{}}
+
+	_, err := context.request.ReadFrom(conn)
+
+	return &context, err
+}
+
 // serve handles incoming requests until a stop signal is given with Close.
 func (s *Server) serve() {
 	for {
-		conn, err := s.listener.Accept()
+		conn, err := s.Listener.Accept()
 		if err != nil {
 			if s.isRunning() {
 				panic(fmt.Errorf("serve error: %w", err))
@@ -123,6 +169,7 @@ func (s *Server) serve() {
 	}
 }
 
+// serve calls serve in goroutine.
 func (s *Server) goServe() {
 	s.wg.Add(1)
 
@@ -145,8 +192,8 @@ func (s *Server) handle(conn net.Conn) {
 	}()
 
 	for {
-		request := &rcon.Packet{}
-		if _, err := request.ReadFrom(conn); err != nil {
+		ctx, err := s.NewContext(conn)
+		if err != nil {
 			if err == io.EOF {
 				return
 			}
@@ -154,11 +201,19 @@ func (s *Server) handle(conn net.Conn) {
 			panic(fmt.Errorf("failed read request: %w", err))
 		}
 
-		switch request.Type {
+		switch ctx.Request().Type {
 		case rcon.SERVERDATA_AUTH:
-			s.handler.auth(s, conn, request)
+			if s.Settings.AuthResponseDelay != 0 {
+				time.Sleep(s.Settings.AuthResponseDelay)
+			}
+
+			s.authHandler(ctx)
 		case rcon.SERVERDATA_EXECCOMMAND:
-			s.handler.command(s, conn, request)
+			if s.Settings.CommandResponseDelay != 0 {
+				time.Sleep(s.Settings.CommandResponseDelay)
+			}
+
+			s.commandHandler(ctx)
 		}
 	}
 }

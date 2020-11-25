@@ -16,64 +16,39 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func commandHandler(s *rcontest.Server, conn io.Writer, request *rcon.Packet) {
-	writeWithInvalidPadding := func(conn io.Writer, packet *rcon.Packet) error {
+func commandHandler(c *rcontest.Context) {
+	writeWithInvalidPadding := func(conn io.Writer, packet *rcon.Packet) {
 		buffer := bytes.NewBuffer(make([]byte, 0, packet.Size+4))
 
-		if err := binary.Write(buffer, binary.LittleEndian, packet.Size); err != nil {
-			return err
-		}
-
-		if err := binary.Write(buffer, binary.LittleEndian, packet.ID); err != nil {
-			return err
-		}
-
-		if err := binary.Write(buffer, binary.LittleEndian, packet.Type); err != nil {
-			return err
-		}
+		binary.Write(buffer, binary.LittleEndian, packet.Size)
+		binary.Write(buffer, binary.LittleEndian, packet.ID)
+		binary.Write(buffer, binary.LittleEndian, packet.Type)
 
 		// Write command body, null terminated ASCII string and an empty ASCIIZ string.
 		// Second padding byte is incorrect.
-		if _, err := buffer.Write(append([]byte(packet.Body()), 0x00, 0x01)); err != nil {
-			return err
-		}
+		buffer.Write(append([]byte(packet.Body()), 0x00, 0x01))
 
-		if _, err := buffer.WriteTo(conn); err != nil {
-			return err
-		}
-
-		return nil
+		buffer.WriteTo(conn)
 	}
 
-	var responseBody string
-
-	switch request.Body() {
+	switch c.Request().Body() {
 	case "help":
-		responseBody = "lorem ipsum dolor sit amet"
-	case "deadline":
-		time.Sleep(rcon.DefaultDeadline + 1*time.Second)
-
-		responseBody = request.Body()
+		responseBody := "lorem ipsum dolor sit amet"
+		rcon.NewPacket(rcon.SERVERDATA_RESPONSE_VALUE, c.Request().ID, responseBody).WriteTo(c.Conn())
 	case "rust":
 		// Write specific Rust package.
-		if _, err := rcon.NewPacket(4, request.ID, responseBody).WriteTo(conn); err != nil {
-			return
-		}
+		rcon.NewPacket(4, c.Request().ID, "").WriteTo(c.Conn())
 
-		responseBody = request.Body()
+		rcon.NewPacket(rcon.SERVERDATA_RESPONSE_VALUE, c.Request().ID, c.Request().Body()).WriteTo(c.Conn())
 	case "padding":
-		_ = writeWithInvalidPadding(conn, rcon.NewPacket(rcon.SERVERDATA_RESPONSE_VALUE, request.ID, ""))
-
-		return
+		writeWithInvalidPadding(c.Conn(), rcon.NewPacket(rcon.SERVERDATA_RESPONSE_VALUE, c.Request().ID, ""))
 	default:
-		responseBody = "unknown command"
+		rcon.NewPacket(rcon.SERVERDATA_RESPONSE_VALUE, c.Request().ID, "unknown command").WriteTo(c.Conn())
 	}
-
-	_, _ = rcon.NewPacket(rcon.SERVERDATA_RESPONSE_VALUE, request.ID, responseBody).WriteTo(conn)
 }
 
 func TestDial(t *testing.T) {
-	server := rcontest.NewServer(nil, rcontest.SetSettings(rcontest.Settings{Password: "password"}))
+	server := rcontest.NewServer(rcontest.SetSettings(rcontest.Settings{Password: "password"}))
 	defer server.Close()
 
 	t.Run("connection refused", func(t *testing.T) {
@@ -86,7 +61,7 @@ func TestDial(t *testing.T) {
 	})
 
 	t.Run("connection timeout", func(t *testing.T) {
-		server := rcontest.NewServer(nil, rcontest.SetSettings(rcontest.Settings{Password: "password", AuthResponseDelay: 6 * time.Second}))
+		server := rcontest.NewServer(rcontest.SetSettings(rcontest.Settings{Password: "password", AuthResponseDelay: 6 * time.Second}))
 		defer server.Close()
 
 		conn, err := rcon.Dial(server.Addr(), "", rcon.SetDialTimeout(5*time.Second))
@@ -113,7 +88,10 @@ func TestDial(t *testing.T) {
 }
 
 func TestConn_Execute(t *testing.T) {
-	server := rcontest.NewServer(commandHandler, rcontest.SetSettings(rcontest.Settings{Password: "password"}))
+	server := rcontest.NewUnstartedServer()
+	server.Settings.Password = "password"
+	server.SetCommandHandler(commandHandler)
+	server.Start()
 	defer server.Close()
 
 	t.Run("incorrect command", func(t *testing.T) {
@@ -157,6 +135,9 @@ func TestConn_Execute(t *testing.T) {
 	})
 
 	t.Run("read deadline", func(t *testing.T) {
+		server := rcontest.NewServer(rcontest.SetSettings(rcontest.Settings{Password: "password", CommandResponseDelay: 2 * time.Second}))
+		defer server.Close()
+
 		conn, err := rcon.Dial(server.Addr(), "password", rcon.SetDeadline(1*time.Second))
 		if !assert.NoError(t, err) {
 			return
