@@ -3,7 +3,6 @@ package rcon_test
 import (
 	"bytes"
 	"encoding/binary"
-	"encoding/json"
 	"fmt"
 	"io"
 	"os"
@@ -200,7 +199,8 @@ func TestConn_Execute(t *testing.T) {
 		password := getVar("TEST_PZ_SERVER_PASSWORD", "docker")
 
 		t.Run("pz server", func(t *testing.T) {
-			needle := `List of server commands :
+			needle := func() string {
+				n := `List of server commands :
 * addalltowhitelist : Add all the current users connected with a password in the whitelist, so their account is protected.
 * additem : Add an item to a player, if no username is given the item will be added to you, count is optional, use /additem \"username\" \"module.item\" count, ex : /additem \"rj\" \"Base.Axe\" count
 * adduser : Use this command to add a new user in a whitelisted server, use : /adduser \"username\" \"pwd\"
@@ -238,7 +238,10 @@ func TestConn_Execute(t *testing.T) {
 * unbanuser : Unban a player, use : /unbanuser \"username\"
 * voiceban : Block voice from user \"username\", use : /voiceban \"username\" -value, ex /voiceban \"rj\" -true (could be -false)`
 
-			needle = strings.Replace(needle, "List of server commands :", "List of server commands : ", -1)
+				n = strings.Replace(n, "List of server commands :", "List of server commands : ", -1)
+
+				return n
+			}()
 
 			conn, err := rcon.Dial(addr, password)
 			if err != nil {
@@ -250,19 +253,8 @@ func TestConn_Execute(t *testing.T) {
 
 			result, err := conn.Execute("help")
 			assert.NoError(t, err)
-			assert.NotEmpty(t, result)
 
-			if !strings.Contains(result, needle) {
-				diff := struct {
-					R string
-					N string
-				}{R: result, N: needle}
-
-				js, _ := json.Marshal(diff)
-				fmt.Println(string(js))
-
-				t.Error("response is not contain needle string")
-			}
+			assert.Equal(t, needle, result)
 		})
 	}
 
