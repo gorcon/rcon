@@ -1,5 +1,4 @@
 // package rcontest contains RCON server for RCON client testing.
-// WIP: rcontest is not finally implemented. DO NOT USE IN PRODUCTION!
 
 package rcontest
 
@@ -194,11 +193,11 @@ func (s *Server) handle(conn net.Conn) {
 	for {
 		ctx, err := s.NewContext(conn)
 		if err != nil {
-			if err == io.EOF {
-				return
+			if err != io.EOF {
+				panic(fmt.Errorf("failed read request: %w", err))
 			}
 
-			panic(fmt.Errorf("failed read request: %w", err))
+			return
 		}
 
 		switch ctx.Request().Type {

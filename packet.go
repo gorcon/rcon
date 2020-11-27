@@ -78,32 +78,14 @@ func (packet *Packet) Body() string {
 func (packet *Packet) WriteTo(w io.Writer) (n int64, err error) {
 	buffer := bytes.NewBuffer(make([]byte, 0, packet.Size+4))
 
-	if err := binary.Write(buffer, binary.LittleEndian, packet.Size); err != nil {
-		return 0, err
-	}
-
-	n += 4
-
-	if err := binary.Write(buffer, binary.LittleEndian, packet.ID); err != nil {
-		return n, err
-	}
-
-	n += 4
-
-	if err := binary.Write(buffer, binary.LittleEndian, packet.Type); err != nil {
-		return n, err
-	}
-
-	n += 4
+	_ = binary.Write(buffer, binary.LittleEndian, packet.Size)
+	_ = binary.Write(buffer, binary.LittleEndian, packet.ID)
+	_ = binary.Write(buffer, binary.LittleEndian, packet.Type)
 
 	// Write command body, null terminated ASCII string and an empty ASCIIZ string.
-	if m, err := buffer.Write(append(packet.body, 0x00, 0x00)); err != nil {
-		return n + int64(m), err
-	}
+	buffer.Write(append(packet.body, 0x00, 0x00))
 
-	m, err := buffer.WriteTo(w)
-
-	return n + m, err
+	return buffer.WriteTo(w)
 }
 
 // ReadFrom implements io.ReaderFrom for read a packet from r.

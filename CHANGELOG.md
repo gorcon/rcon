@@ -4,6 +4,9 @@ All notable changes to this project will be documented in this file.
 **ATTN**: This project uses [semantic versioning](http://semver.org/).
 
 ## [Unreleased]
+### Fixed
+- Fixed wrong number of bytes written in Packet WriteTo function.
+
 ### Added
 - Added rcontest Server for mocking RCON connections.
 

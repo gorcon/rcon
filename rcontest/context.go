@@ -7,12 +7,11 @@ import (
 )
 
 // Context represents the context of the current RCON request. It holds request
-// and conn objects and registered handler.
+// and conn objects.
 type Context struct {
 	server  *Server
 	conn    net.Conn
 	request *rcon.Packet
-	handler HandlerFunc
 }
 
 // Server returns the Server instance.
@@ -28,9 +27,4 @@ func (c *Context) Conn() net.Conn {
 // Request returns received *rcon.Packet.
 func (c *Context) Request() *rcon.Packet {
 	return c.request
-}
-
-// Handler returns the matched handler.
-func (c *Context) Handler() HandlerFunc {
-	return c.handler
 }
