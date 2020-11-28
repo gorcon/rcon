@@ -1,6 +1,7 @@
 package rcontest_test
 
 import (
+	"errors"
 	"testing"
 	"time"
 
@@ -65,6 +66,39 @@ func TestNewServer(t *testing.T) {
 
 		if response != "I do it all." {
 			t.Errorf("got %q, want I do it all.", response)
+		}
+	})
+
+	t.Run("authentication failed", func(t *testing.T) {
+		server := rcontest.NewServer()
+		defer server.Close()
+
+		client, err := rcon.Dial(server.Addr(), "wrong")
+		if err != nil {
+			defer client.Close()
+		}
+		if !errors.Is(err, rcon.ErrAuthFailed) {
+			t.Fatal(err)
+		}
+	})
+
+	t.Run("empty handler", func(t *testing.T) {
+		server := rcontest.NewServer()
+		defer server.Close()
+
+		client, err := rcon.Dial(server.Addr(), "")
+		if err != nil {
+			t.Fatal(err)
+		}
+		defer client.Close()
+
+		response, err := client.Execute("whatever")
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		if response != "" {
+			t.Errorf("got %q, want empty string", response)
 		}
 	})
 }
