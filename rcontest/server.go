@@ -1,5 +1,4 @@
-// package rcontest contains RCON server for RCON client testing.
-
+// Package rcontest contains RCON server for RCON client testing.
 package rcontest
 
 import (

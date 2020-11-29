@@ -1,5 +1,5 @@
 // Package rcon implements Source RCON Protocol which is described in the
-// documentation: https://developer.valvesoftware.com/wiki/Source_RCON_Protocol
+// documentation: https://developer.valvesoftware.com/wiki/Source_RCON_Protocol.
 package rcon
 
 import (
