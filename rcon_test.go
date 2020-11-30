@@ -13,7 +13,6 @@ import (
 
 	"github.com/gorcon/rcon"
 	"github.com/gorcon/rcon/rcontest"
-	"github.com/stretchr/testify/assert"
 )
 
 func authHandler(c *rcontest.Context) {
@@ -141,42 +140,64 @@ func TestConn_Execute(t *testing.T) {
 
 	t.Run("incorrect command", func(t *testing.T) {
 		conn, err := rcon.Dial(server.Addr(), "password")
-		if !assert.NoError(t, err) {
-			return
+		if err != nil {
+			t.Fatalf("got err %q, want %v", err, nil)
 		}
-		defer assert.NoError(t, conn.Close())
+		defer conn.Close()
 
 		result, err := conn.Execute("")
-		assert.Equal(t, err, rcon.ErrCommandEmpty)
-		assert.Equal(t, 0, len(result))
+		if !errors.Is(err, rcon.ErrCommandEmpty) {
+			t.Errorf("got err %q, want %q", err, rcon.ErrCommandEmpty)
+		}
+
+		if len(result) != 0 {
+			t.Fatalf("got result len %d, want %d", len(result), 0)
+		}
 
 		result, err = conn.Execute(string(make([]byte, 1001)))
-		assert.Equal(t, err, rcon.ErrCommandTooLong)
-		assert.Equal(t, 0, len(result))
+		if !errors.Is(err, rcon.ErrCommandTooLong) {
+			t.Errorf("got err %q, want %q", err, rcon.ErrCommandTooLong)
+		}
+
+		if len(result) != 0 {
+			t.Fatalf("got result len %d, want %d", len(result), 0)
+		}
 	})
 
 	t.Run("closed network connection 1", func(t *testing.T) {
 		conn, err := rcon.Dial(server.Addr(), "password", rcon.SetDeadline(0))
-		if !assert.NoError(t, err) {
-			return
+		if err != nil {
+			t.Fatalf("got err %q, want %v", err, nil)
 		}
-		assert.NoError(t, conn.Close())
+		conn.Close()
 
 		result, err := conn.Execute("help")
-		assert.EqualError(t, err, fmt.Sprintf("write tcp %s->%s: use of closed network connection", conn.LocalAddr(), conn.RemoteAddr()))
-		assert.Equal(t, 0, len(result))
+		wantErrMsg := fmt.Sprintf("write tcp %s->%s: use of closed network connection", conn.LocalAddr(), conn.RemoteAddr())
+		if err == nil || err.Error() != wantErrMsg {
+			t.Errorf("got err %q, want to contain %q", err, wantErrMsg)
+		}
+
+		if len(result) != 0 {
+			t.Fatalf("got result len %d, want %d", len(result), 0)
+		}
 	})
 
 	t.Run("closed network connection 2", func(t *testing.T) {
 		conn, err := rcon.Dial(server.Addr(), "password")
-		if !assert.NoError(t, err) {
-			return
+		if err != nil {
+			t.Fatalf("got err %q, want %v", err, nil)
 		}
-		assert.NoError(t, conn.Close())
+		conn.Close()
 
 		result, err := conn.Execute("help")
-		assert.EqualError(t, err, fmt.Sprintf("set tcp %s: use of closed network connection", conn.LocalAddr()))
-		assert.Equal(t, 0, len(result))
+		wantErrMsg := fmt.Sprintf("set tcp %s: use of closed network connection", conn.LocalAddr())
+		if err == nil || err.Error() != wantErrMsg {
+			t.Errorf("got err %q, want to contain %q", err, wantErrMsg)
+		}
+
+		if len(result) != 0 {
+			t.Fatalf("got result len %d, want %d", len(result), 0)
+		}
 	})
 
 	t.Run("read deadline", func(t *testing.T) {
@@ -184,73 +205,90 @@ func TestConn_Execute(t *testing.T) {
 		defer server.Close()
 
 		conn, err := rcon.Dial(server.Addr(), "password", rcon.SetDeadline(1*time.Second))
-		if !assert.NoError(t, err) {
-			return
+		if err != nil {
+			t.Fatalf("got err %q, want %v", err, nil)
 		}
-		defer func() {
-			assert.NoError(t, conn.Close())
-		}()
+		defer conn.Close()
 
 		result, err := conn.Execute("deadline")
-		assert.EqualError(t, err, fmt.Sprintf("read tcp %s->%s: i/o timeout", conn.LocalAddr(), conn.RemoteAddr()))
+		wantErrMsg := fmt.Sprintf("read tcp %s->%s: i/o timeout", conn.LocalAddr(), conn.RemoteAddr())
+		if err == nil || err.Error() != wantErrMsg {
+			t.Errorf("got err %q, want to contain %q", err, wantErrMsg)
+		}
 
-		assert.Equal(t, 0, len(result))
+		if len(result) != 0 {
+			t.Fatalf("got result len %d, want %d", len(result), 0)
+		}
 	})
 
 	t.Run("invalid padding", func(t *testing.T) {
 		conn, err := rcon.Dial(server.Addr(), "password")
-		if !assert.NoError(t, err) {
-			return
+		if err != nil {
+			t.Fatalf("got err %q, want %v", err, nil)
 		}
-		defer func() {
-			assert.NoError(t, conn.Close())
-		}()
+		defer conn.Close()
 
-		_, err = conn.Execute("padding")
-		assert.Equal(t, rcon.ErrInvalidPacketPadding, err)
+		result, err := conn.Execute("padding")
+		if !errors.Is(err, rcon.ErrInvalidPacketPadding) {
+			t.Errorf("got err %q, want %q", err, rcon.ErrInvalidPacketPadding)
+		}
+
+		if len(result) != 2 {
+			t.Fatalf("got result len %d, want %d", len(result), 2)
+		}
 	})
 
 	t.Run("invalid response id", func(t *testing.T) {
 		conn, err := rcon.Dial(server.Addr(), "password")
-		if !assert.NoError(t, err) {
-			return
+		if err != nil {
+			t.Fatalf("got err %q, want %v", err, nil)
 		}
-		defer func() {
-			assert.NoError(t, conn.Close())
-		}()
+		defer conn.Close()
 
-		_, err = conn.Execute("another")
-		assert.Equal(t, rcon.ErrInvalidPacketID, err)
+		result, err := conn.Execute("another")
+		if !errors.Is(err, rcon.ErrInvalidPacketID) {
+			t.Errorf("got err %q, want %q", err, rcon.ErrInvalidPacketID)
+		}
+
+		if len(result) != 0 {
+			t.Fatalf("got result len %d, want %d", len(result), 0)
+		}
 	})
 
 	t.Run("success help command", func(t *testing.T) {
 		conn, err := rcon.Dial(server.Addr(), "password")
-		if !assert.NoError(t, err) {
-			return
+		if err != nil {
+			t.Fatalf("got err %q, want %v", err, nil)
 		}
-		defer func() {
-			assert.NoError(t, conn.Close())
-		}()
+		defer conn.Close()
 
 		result, err := conn.Execute("help")
-		assert.NoError(t, err)
+		if err != nil {
+			t.Fatalf("got err %q, want %v", err, nil)
+		}
 
-		assert.Equal(t, "lorem ipsum dolor sit amet", result)
+		resultWant := "lorem ipsum dolor sit amet"
+		if result != resultWant {
+			t.Fatalf("got result %q, want %q", result, resultWant)
+		}
 	})
 
 	t.Run("rust workaround", func(t *testing.T) {
 		conn, err := rcon.Dial(server.Addr(), "password", rcon.SetDeadline(1*time.Second))
-		if !assert.NoError(t, err) {
-			return
+		if err != nil {
+			t.Fatalf("got err %q, want %v", err, nil)
 		}
-		defer func() {
-			assert.NoError(t, conn.Close())
-		}()
+		defer conn.Close()
 
 		result, err := conn.Execute("rust")
-		assert.NoError(t, err)
+		if err != nil {
+			t.Fatalf("got err %q, want %v", err, nil)
+		}
 
-		assert.Equal(t, "rust", result)
+		resultWant := "rust"
+		if result != resultWant {
+			t.Fatalf("got result %q, want %q", result, resultWant)
+		}
 	})
 
 	if run := getVar("TEST_PZ_SERVER", "false"); run == "true" {
@@ -304,16 +342,18 @@ func TestConn_Execute(t *testing.T) {
 
 			conn, err := rcon.Dial(addr, password)
 			if err != nil {
-				t.Fatal(err)
+				t.Fatalf("got err %q, want %v", err, nil)
 			}
-			defer func() {
-				assert.NoError(t, conn.Close())
-			}()
+			defer conn.Close()
 
 			result, err := conn.Execute("help")
-			assert.NoError(t, err)
+			if err != nil {
+				t.Fatalf("got err %q, want %v", err, nil)
+			}
 
-			assert.Equal(t, needle, result)
+			if result != needle {
+				t.Fatalf("got result %q, want %q", result, needle)
+			}
 		})
 	}
 
@@ -324,15 +364,18 @@ func TestConn_Execute(t *testing.T) {
 		t.Run("rust server", func(t *testing.T) {
 			conn, err := rcon.Dial(addr, password)
 			if err != nil {
-				t.Fatal(err)
+				t.Fatalf("got err %q, want %v", err, nil)
 			}
-			defer func() {
-				assert.NoError(t, conn.Close())
-			}()
+			defer conn.Close()
 
 			result, err := conn.Execute("status")
-			assert.NoError(t, err)
-			assert.NotEmpty(t, result)
+			if err != nil {
+				t.Fatalf("got err %q, want %v", err, nil)
+			}
+
+			if result == "" {
+				t.Fatal("got empty result, want value")
+			}
 
 			fmt.Println(result)
 		})
