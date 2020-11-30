@@ -3,6 +3,7 @@ package rcon_test
 import (
 	"bytes"
 	"encoding/binary"
+	"errors"
 	"fmt"
 	"io"
 	"os"
@@ -67,31 +68,31 @@ func TestDial(t *testing.T) {
 	defer server.Close()
 
 	t.Run("connection refused", func(t *testing.T) {
-		conn, err := rcon.Dial("127.0.0.2:12345", "password")
-		if !assert.Error(t, err) {
-			// Close connection if established.
-			assert.NoError(t, conn.Close())
+		wantErrContains := "connect: connection refused"
+
+		_, err := rcon.Dial("127.0.0.2:12345", "password")
+		if err == nil || !strings.Contains(err.Error(), wantErrContains) {
+			t.Errorf("got err %q, want to contain %q", err, wantErrContains)
 		}
-		assert.EqualError(t, err, "dial tcp 127.0.0.2:12345: connect: connection refused")
 	})
 
 	t.Run("connection timeout", func(t *testing.T) {
 		server := rcontest.NewServer(rcontest.SetSettings(rcontest.Settings{Password: "password", AuthResponseDelay: 6 * time.Second}))
 		defer server.Close()
 
-		conn, err := rcon.Dial(server.Addr(), "", rcon.SetDialTimeout(5*time.Second))
-		if !assert.Error(t, err) {
-			assert.NoError(t, conn.Close())
+		wantErrContains := "i/o timeout"
+
+		_, err := rcon.Dial(server.Addr(), "", rcon.SetDialTimeout(5*time.Second))
+		if err == nil || !strings.Contains(err.Error(), wantErrContains) {
+			t.Errorf("got err %q, want to contain %q", err, wantErrContains)
 		}
-		assert.EqualError(t, err, fmt.Sprintf("read tcp %s->%s: i/o timeout", conn.LocalAddr(), conn.RemoteAddr()))
 	})
 
 	t.Run("authentication failed", func(t *testing.T) {
-		conn, err := rcon.Dial(server.Addr(), "wrong")
-		if !assert.Error(t, err) {
-			assert.NoError(t, conn.Close())
+		_, err := rcon.Dial(server.Addr(), "wrong")
+		if !errors.Is(err, rcon.ErrAuthFailed) {
+			t.Errorf("got err %q, want %q", err, rcon.ErrAuthFailed)
 		}
-		assert.EqualError(t, err, "authentication failed")
 	})
 
 	t.Run("invalid packet type", func(t *testing.T) {
@@ -101,11 +102,10 @@ func TestDial(t *testing.T) {
 		)
 		defer server.Close()
 
-		conn, err := rcon.Dial(server.Addr(), "invalid packet type")
-		if !assert.Error(t, err) {
-			assert.NoError(t, conn.Close())
+		_, err := rcon.Dial(server.Addr(), "invalid packet type")
+		if !errors.Is(err, rcon.ErrInvalidAuthResponse) {
+			t.Errorf("got err %q, want %q", err, rcon.ErrInvalidAuthResponse)
 		}
-		assert.Equal(t, rcon.ErrInvalidAuthResponse, err)
 	})
 
 	t.Run("invalid response id", func(t *testing.T) {
@@ -115,18 +115,20 @@ func TestDial(t *testing.T) {
 		)
 		defer server.Close()
 
-		conn, err := rcon.Dial(server.Addr(), "another")
-		if !assert.Error(t, err) {
-			assert.NoError(t, conn.Close())
+		_, err := rcon.Dial(server.Addr(), "another")
+		if !errors.Is(err, rcon.ErrInvalidPacketID) {
+			t.Errorf("got err %q, want %q", err, rcon.ErrInvalidPacketID)
 		}
-		assert.Equal(t, rcon.ErrInvalidPacketID, err)
 	})
 
 	t.Run("auth success", func(t *testing.T) {
 		conn, err := rcon.Dial(server.Addr(), "password")
-		if assert.NoError(t, err) {
-			assert.NoError(t, conn.Close())
+		if err != nil {
+			t.Errorf("got err %q, want %v", err, nil)
+			return
 		}
+
+		conn.Close()
 	})
 }
 
