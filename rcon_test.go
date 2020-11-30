@@ -15,6 +15,20 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+func authHandler(c *rcontest.Context) {
+	switch c.Request().Body() {
+	case c.Server().Settings.Password:
+		rcon.NewPacket(rcon.SERVERDATA_RESPONSE_VALUE, c.Request().ID, "").WriteTo(c.Conn())
+		rcon.NewPacket(rcon.SERVERDATA_AUTH_RESPONSE, c.Request().ID, "").WriteTo(c.Conn())
+	case "invalid packet type":
+		rcon.NewPacket(42, c.Request().ID, "").WriteTo(c.Conn())
+	case "another":
+		rcon.NewPacket(rcon.SERVERDATA_AUTH_RESPONSE, 42, "").WriteTo(c.Conn())
+	default:
+		rcon.NewPacket(rcon.SERVERDATA_AUTH_RESPONSE, -1, string([]byte{0x00})).WriteTo(c.Conn())
+	}
+}
+
 func commandHandler(c *rcontest.Context) {
 	writeWithInvalidPadding := func(conn io.Writer, packet *rcon.Packet) {
 		buffer := bytes.NewBuffer(make([]byte, 0, packet.Size+4))
@@ -38,9 +52,11 @@ func commandHandler(c *rcontest.Context) {
 		// Write specific Rust package.
 		rcon.NewPacket(4, c.Request().ID, "").WriteTo(c.Conn())
 
-		rcon.NewPacket(rcon.SERVERDATA_RESPONSE_VALUE, c.Request().ID, c.Request().Body()).WriteTo(c.Conn())
+		rcon.NewPacket(rcon.SERVERDATA_RESPONSE_VALUE, -1, c.Request().Body()).WriteTo(c.Conn())
 	case "padding":
 		writeWithInvalidPadding(c.Conn(), rcon.NewPacket(rcon.SERVERDATA_RESPONSE_VALUE, c.Request().ID, ""))
+	case "another":
+		rcon.NewPacket(rcon.SERVERDATA_RESPONSE_VALUE, 42, "").WriteTo(c.Conn())
 	default:
 		rcon.NewPacket(rcon.SERVERDATA_RESPONSE_VALUE, c.Request().ID, "unknown command").WriteTo(c.Conn())
 	}
@@ -76,6 +92,34 @@ func TestDial(t *testing.T) {
 			assert.NoError(t, conn.Close())
 		}
 		assert.EqualError(t, err, "authentication failed")
+	})
+
+	t.Run("invalid packet type", func(t *testing.T) {
+		server := rcontest.NewServer(
+			rcontest.SetSettings(rcontest.Settings{Password: "password"}),
+			rcontest.SetAuthHandler(authHandler),
+		)
+		defer server.Close()
+
+		conn, err := rcon.Dial(server.Addr(), "invalid packet type")
+		if !assert.Error(t, err) {
+			assert.NoError(t, conn.Close())
+		}
+		assert.Equal(t, rcon.ErrInvalidAuthResponse, err)
+	})
+
+	t.Run("invalid response id", func(t *testing.T) {
+		server := rcontest.NewServer(
+			rcontest.SetSettings(rcontest.Settings{Password: "password"}),
+			rcontest.SetAuthHandler(authHandler),
+		)
+		defer server.Close()
+
+		conn, err := rcon.Dial(server.Addr(), "another")
+		if !assert.Error(t, err) {
+			assert.NoError(t, conn.Close())
+		}
+		assert.Equal(t, rcon.ErrInvalidPacketID, err)
 	})
 
 	t.Run("auth success", func(t *testing.T) {
@@ -162,6 +206,19 @@ func TestConn_Execute(t *testing.T) {
 
 		_, err = conn.Execute("padding")
 		assert.Equal(t, rcon.ErrInvalidPacketPadding, err)
+	})
+
+	t.Run("invalid response id", func(t *testing.T) {
+		conn, err := rcon.Dial(server.Addr(), "password")
+		if !assert.NoError(t, err) {
+			return
+		}
+		defer func() {
+			assert.NoError(t, conn.Close())
+		}()
+
+		_, err = conn.Execute("another")
+		assert.Equal(t, rcon.ErrInvalidPacketID, err)
 	})
 
 	t.Run("success help command", func(t *testing.T) {

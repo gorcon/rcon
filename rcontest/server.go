@@ -44,7 +44,7 @@ func AuthHandler(c *Context) {
 		_, _ = rcon.NewPacket(rcon.SERVERDATA_RESPONSE_VALUE, c.Request().ID, "").WriteTo(c.Conn())
 
 		// Than write SERVERDATA_AUTH_RESPONSE packet to allow authHandler success.
-		_, _ = rcon.NewPacket(rcon.SERVERDATA_AUTH_RESPONSE, c.Request().ID, "").WriteTo(c.Conn())
+		_, _ = rcon.NewPacket(rcon.SERVERDATA_AUTH_RESPONSE, rcon.SERVERDATA_AUTH_ID, "").WriteTo(c.Conn())
 	} else {
 		// If authentication was failed, the ID must be assigned to -1.
 		_, _ = rcon.NewPacket(rcon.SERVERDATA_AUTH_RESPONSE, -1, string([]byte{0x00})).WriteTo(c.Conn())
