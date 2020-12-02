@@ -1,15 +1,8 @@
 run:
   skip-dirs:
-    - test/testdata_etc
-    - pkg/golinters/goanalysis/(checker|passes)
-    - data/
-    - .vscode/
-    - .directory/
-    - debug/
     - vendor/
+
   skip-files:
-    - Gopkg.lock
-    - .gitignore
     - ".*_test.go$"
 
 output:

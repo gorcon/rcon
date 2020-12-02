@@ -114,7 +114,7 @@ func (s *Server) Start() {
 	s.goServe()
 }
 
-// Close shuts down the MockServer.
+// Close shuts down the Server.
 func (s *Server) Close() {
 	if s.closed {
 		return
@@ -135,7 +135,7 @@ func (s *Server) Close() {
 	s.mu.Unlock()
 }
 
-// Addr returns IPv4 string MockServer address.
+// Addr returns IPv4 string Server address.
 func (s *Server) Addr() string {
 	return s.addr
 }
@@ -216,7 +216,7 @@ func (s *Server) handle(conn net.Conn) {
 	}
 }
 
-// isRunning returns true if MockServer is running and false if is not.
+// isRunning returns true if Server is running and false if is not.
 func (s *Server) isRunning() bool {
 	select {
 	case <-s.quit:
