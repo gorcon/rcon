@@ -1,7 +1,6 @@
 run:
   skip-dirs:
     - vendor/
-
   skip-files:
     - ".*_test.go$"
 
