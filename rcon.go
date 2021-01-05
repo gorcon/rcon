@@ -104,7 +104,7 @@ func Dial(address string, password string, options ...Option) (*Conn, error) {
 	conn, err := net.DialTimeout("tcp", address, settings.dialTimeout)
 	if err != nil {
 		// Failed to open TCP connection to the server.
-		return nil, err
+		return nil, fmt.Errorf("rcon: %w", err)
 	}
 
 	client := Conn{conn: conn, settings: settings}
@@ -112,10 +112,11 @@ func Dial(address string, password string, options ...Option) (*Conn, error) {
 	if err := client.auth(password); err != nil {
 		// Failed to auth conn with the server.
 		if err2 := client.Close(); err2 != nil {
+			//nolint:errorlint // TODO: Come up with the better wrapping
 			return &client, fmt.Errorf("%w: %v. Previous error: %v", ErrMultiErrorOccurred, err2, err)
 		}
 
-		return &client, err
+		return &client, fmt.Errorf("rcon: %w", err)
 	}
 
 	return &client, nil
@@ -174,7 +175,7 @@ func (c *Conn) auth(password string) error {
 
 	if c.settings.deadline != 0 {
 		if err := c.conn.SetReadDeadline(time.Now().Add(c.settings.deadline)); err != nil {
-			return err
+			return fmt.Errorf("rcon: %w", err)
 		}
 	}
 
@@ -200,7 +201,7 @@ func (c *Conn) auth(password string) error {
 	// We must to read response body.
 	buffer := make([]byte, response.Size-PacketHeaderSize)
 	if _, err := c.conn.Read(buffer); err != nil {
-		return err
+		return fmt.Errorf("rcon: %w", err)
 	}
 
 	if response.Type != SERVERDATA_AUTH_RESPONSE {
@@ -222,7 +223,7 @@ func (c *Conn) auth(password string) error {
 func (c *Conn) write(packetType int32, packetID int32, command string) error {
 	if c.settings.deadline != 0 {
 		if err := c.conn.SetWriteDeadline(time.Now().Add(c.settings.deadline)); err != nil {
-			return err
+			return fmt.Errorf("rcon: %w", err)
 		}
 	}
 
@@ -236,7 +237,7 @@ func (c *Conn) write(packetType int32, packetID int32, command string) error {
 func (c *Conn) read() (*Packet, error) {
 	if c.settings.deadline != 0 {
 		if err := c.conn.SetReadDeadline(time.Now().Add(c.settings.deadline)); err != nil {
-			return nil, err
+			return nil, fmt.Errorf("rcon: %w", err)
 		}
 	}
 
@@ -270,15 +271,15 @@ func (c *Conn) read() (*Packet, error) {
 func (c *Conn) readHeader() (Packet, error) {
 	var packet Packet
 	if err := binary.Read(c.conn, binary.LittleEndian, &packet.Size); err != nil {
-		return packet, err
+		return packet, fmt.Errorf("rcon: read packet size: %w", err)
 	}
 
 	if err := binary.Read(c.conn, binary.LittleEndian, &packet.ID); err != nil {
-		return packet, err
+		return packet, fmt.Errorf("rcon: read packet id: %w", err)
 	}
 
 	if err := binary.Read(c.conn, binary.LittleEndian, &packet.Type); err != nil {
-		return packet, err
+		return packet, fmt.Errorf("rcon: read packet type: %w", err)
 	}
 
 	return packet, nil

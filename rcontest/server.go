@@ -2,6 +2,7 @@
 package rcontest
 
 import (
+	"errors"
 	"fmt"
 	"io"
 	"net"
@@ -144,9 +145,11 @@ func (s *Server) Addr() string {
 func (s *Server) NewContext(conn net.Conn) (*Context, error) {
 	ctx := Context{server: s, conn: conn, request: &rcon.Packet{}}
 
-	_, err := ctx.request.ReadFrom(conn)
+	if _, err := ctx.request.ReadFrom(conn); err != nil {
+		return &ctx, fmt.Errorf("rcontest: %w", err)
+	}
 
-	return &ctx, err
+	return &ctx, nil
 }
 
 // serve handles incoming requests until a stop signal is given with Close.
@@ -155,7 +158,7 @@ func (s *Server) serve() {
 		conn, err := s.Listener.Accept()
 		if err != nil {
 			if s.isRunning() {
-				panic(fmt.Errorf("serve error: %w", err))
+				panic(fmt.Errorf("rcontest: %w", err))
 			}
 
 			return
@@ -192,7 +195,7 @@ func (s *Server) handle(conn net.Conn) {
 	for {
 		ctx, err := s.NewContext(conn)
 		if err != nil {
-			if err != io.EOF {
+			if !errors.Is(err, io.EOF) {
 				panic(fmt.Errorf("failed read request: %w", err))
 			}
 
