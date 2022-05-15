@@ -46,6 +46,8 @@ linters-settings:
   gocyclo:
     # minimal code complexity to report, 30 by default (but we recommend 10-20)
     min-complexity: 15
+  cyclop:
+    max-complexity: 15
   godox:
     keywords:
       - "BUG"
@@ -121,6 +123,7 @@ linters:
   enable-all: true
   disable:
     - gomnd
+    - wrapcheck
 
 issues:
   exclude:

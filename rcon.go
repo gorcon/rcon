@@ -112,7 +112,6 @@ func Dial(address string, password string, options ...Option) (*Conn, error) {
 	if err := client.auth(password); err != nil {
 		// Failed to auth conn with the server.
 		if err2 := client.Close(); err2 != nil {
-			//nolint:errorlint // TODO: Come up with the better wrapping
 			return &client, fmt.Errorf("%w: %v. Previous error: %v", ErrMultiErrorOccurred, err2, err)
 		}
 
@@ -184,6 +183,11 @@ func (c *Conn) auth(password string) error {
 		return err
 	}
 
+	size := response.Size - PacketHeaderSize
+	if size <= 0 {
+		size = response.Size
+	}
+
 	// When the server receives an auth request, it will respond with an empty
 	// SERVERDATA_RESPONSE_VALUE, followed immediately by a SERVERDATA_AUTH_RESPONSE
 	// indicating whether authentication succeeded or failed.
@@ -191,7 +195,7 @@ func (c *Conn) auth(password string) error {
 	// do this case optional.
 	if response.Type == SERVERDATA_RESPONSE_VALUE {
 		// Discard empty SERVERDATA_RESPONSE_VALUE from authentication response.
-		_, _ = c.conn.Read(make([]byte, response.Size-PacketHeaderSize))
+		_, _ = c.conn.Read(make([]byte, size))
 
 		if response, err = c.readHeader(); err != nil {
 			return err
@@ -199,7 +203,7 @@ func (c *Conn) auth(password string) error {
 	}
 
 	// We must to read response body.
-	buffer := make([]byte, response.Size-PacketHeaderSize)
+	buffer := make([]byte, size)
 	if _, err := c.conn.Read(buffer); err != nil {
 		return fmt.Errorf("rcon: %w", err)
 	}
