@@ -3,11 +3,18 @@ All notable changes to this project will be documented in this file.
 
 **ATTN**: This project uses [semantic versioning](http://semver.org/).
 
-## [Unreleased
+## [Unreleased]
+
+## [v1.3.3] - 2022-05-16
+### Fixed
+- Added "response from not rcon server" error on auth request (Re fixed panic: runtime error: makeslice: len out of range in rcon.Dial #5).
 
 ## [v1.3.2] - 2022-05-16
 ### Fixed
-- Fixed panic: runtime error: makeslice: len out of range in rcon.Dial #5
+- Fixed panic: runtime error: makeslice: len out of range in rcon.Dial
+
+### Updated
+- Updated golangci linter to 1.42.1 version
 
 ## [v1.3.1] - 2021-01-06
 ### Updated
@@ -78,7 +85,8 @@ changed.
 ### Added
 - Initial implementation.
 
-[Unreleased]: https://github.com/gorcon/rcon/compare/v1.3.2...HEAD
+[Unreleased]: https://github.com/gorcon/rcon/compare/v1.3.3...HEAD
+[v1.3.3]: https://github.com/gorcon/rcon/compare/v1.3.2...v1.3.3
 [v1.3.2]: https://github.com/gorcon/rcon/compare/v1.3.1...v1.3.2
 [v1.3.1]: https://github.com/gorcon/rcon/compare/v1.3.0...v1.3.1
 [v1.3.0]: https://github.com/gorcon/rcon/compare/v1.2.4...v1.3.0

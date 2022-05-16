@@ -54,6 +54,9 @@ const (
 )
 
 var (
+	// ErrAuthNotRCON is returned when got auth response with negative size.
+	ErrAuthNotRCON = errors.New("response from not rcon server")
+
 	// ErrInvalidAuthResponse is returned when we didn't get an auth packet
 	// back for second read try after discard empty SERVERDATA_RESPONSE_VALUE
 	// from authentication response.
@@ -184,8 +187,8 @@ func (c *Conn) auth(password string) error {
 	}
 
 	size := response.Size - PacketHeaderSize
-	if size <= 0 {
-		size = response.Size
+	if size < 0 {
+		return ErrAuthNotRCON
 	}
 
 	// When the server receives an auth request, it will respond with an empty

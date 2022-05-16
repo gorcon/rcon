@@ -22,7 +22,7 @@ func authHandler(c *rcontest.Context) {
 	case "another":
 		rcon.NewPacket(rcon.SERVERDATA_AUTH_RESPONSE, 42, "").WriteTo(c.Conn())
 	case "makeslice":
-		size := int32(len([]byte("")) + int(rcon.PacketPaddingSize)) // Some minecraft servers does not add header size
+		size := int32(len([]byte("")))
 
 		buffer := bytes.NewBuffer(make([]byte, 0, size+4))
 
@@ -30,12 +30,7 @@ func authHandler(c *rcontest.Context) {
 		_ = binary.Write(buffer, binary.LittleEndian, c.Request().ID)
 		_ = binary.Write(buffer, binary.LittleEndian, rcon.SERVERDATA_RESPONSE_VALUE)
 
-		// Write command body, null terminated ASCII string and an empty ASCIIZ string.
-		buffer.Write(append([]byte(""), 0x00, 0x00))
-
 		buffer.WriteTo(c.Conn())
-
-		rcon.NewPacket(rcon.SERVERDATA_AUTH_RESPONSE, c.Request().ID, "").WriteTo(c.Conn())
 	case c.Server().Settings.Password:
 		rcon.NewPacket(rcon.SERVERDATA_RESPONSE_VALUE, c.Request().ID, "").WriteTo(c.Conn())
 		rcon.NewPacket(rcon.SERVERDATA_AUTH_RESPONSE, c.Request().ID, "").WriteTo(c.Conn())
@@ -135,6 +130,19 @@ func TestDial(t *testing.T) {
 		}
 	})
 
+	t.Run("makeslice", func(t *testing.T) {
+		server := rcontest.NewServer(
+			rcontest.SetSettings(rcontest.Settings{Password: "makeslice"}),
+			rcontest.SetAuthHandler(authHandler),
+		)
+		defer server.Close()
+
+		_, err := rcon.Dial(server.Addr(), "makeslice")
+		if !errors.Is(err, rcon.ErrAuthNotRCON) {
+			t.Errorf("got err %q, want %q", err, rcon.ErrAuthNotRCON)
+		}
+	})
+
 	t.Run("auth success", func(t *testing.T) {
 		conn, err := rcon.Dial(server.Addr(), "password")
 		if err != nil {
@@ -143,23 +151,6 @@ func TestDial(t *testing.T) {
 		}
 
 		conn.Close()
-	})
-
-	t.Run("makeslice", func(t *testing.T) {
-		server := rcontest.NewServer(
-			rcontest.SetSettings(rcontest.Settings{Password: "makeslice"}),
-			rcontest.SetAuthHandler(authHandler),
-		)
-
-		conn, err := rcon.Dial(server.Addr(), "makeslice")
-		if err != nil {
-			t.Errorf("got err %q, want %v", err, nil)
-			server.Close()
-			return
-		}
-
-		conn.Close()
-		server.Close()
 	})
 }
 
