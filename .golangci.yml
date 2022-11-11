@@ -118,10 +118,70 @@ linters-settings:
     allow-trailing-comment: true
     # Force newlines in end of case at this limit (0 = never).
     force-case-trailing-whitespace: 0
+  varnamelen:
+    # The longest distance, in source lines, that is being considered a "small scope." (defaults to 5)
+    # Variables used in at most this many lines will be ignored.
+    max-distance: 5
+    # The minimum length of a variable's name that is considered "long." (defaults to 3)
+    # Variable names that are at least this long will be ignored.
+    min-name-length: 3
+    # Check method receivers. (defaults to false)
+    check-receiver: false
+    # Check named return values. (defaults to false)
+    check-return: false
+    # Check type parameters. (defaults to false)
+    check-type-param: false
+    # Ignore "ok" variables that hold the bool return value of a type assertion. (defaults to false)
+    ignore-type-assert-ok: false
+    # Ignore "ok" variables that hold the bool return value of a map index. (defaults to false)
+    ignore-map-index-ok: false
+    # Ignore "ok" variables that hold the bool return value of a channel receive. (defaults to false)
+    ignore-chan-recv-ok: false
+    # Optional list of variable names that should be ignored completely. (defaults to empty list)
+    ignore-names:
+      - err
+    # Optional list of variable declarations that should be ignored completely. (defaults to empty list)
+    # Entries must be in one of the following forms (see below for examples):
+    # - for variables, parameters, named return values, method receivers, or type parameters:
+    #   <name> <type>  (<type> can also be a pointer/slice/map/chan/...)
+    # - for constants: const <name>
+    ignore-decls:
+      - t testing.T
+      - f *foo.Bar
+      - e error
+      - i int
+      - const C
+      - T any
+      - m map[string]int
+      - x int
+      - y int
+      - w io.Writer
+      - r io.Reader
+      - i int64
+      - f *os.File
+      - m int
+      - n int64
+      - i int32
+      - c *Context
 
 linters:
   enable-all: true
   disable:
+    - interfacer # is deprecated (since v1.38.0)
+    - scopelint # is deprecated (since v1.39.0)
+    - golint # is deprecated (since v1.41.0)
+    - maligned # is deprecated (since v1.38.0)
+    - ifshort # is deprecated (since v1.48.0)
+    - deadcode # is deprecated (since v1.49.0)
+    - nosnakecase # is deprecated (since v1.48.1)
+    - varcheck # is deprecated (since v1.49.0)
+    - exhaustivestruct # is deprecated (since v1.46.0)
+    - structcheck # is deprecated (since v1.49.0)
+    - rowserrcheck # is disabled because of generics
+    - sqlclosecheck # is disabled because of generics
+    - structcheck # is disabled because of generics
+    - wastedassign # is disabled because of generics
+    - dupword
     - gomnd
     - wrapcheck
 

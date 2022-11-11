@@ -76,7 +76,7 @@ func (packet *Packet) Body() string {
 }
 
 // WriteTo implements io.WriterTo for write a packet to w.
-func (packet *Packet) WriteTo(w io.Writer) (n int64, err error) {
+func (packet *Packet) WriteTo(w io.Writer) (int64, error) {
 	buffer := bytes.NewBuffer(make([]byte, 0, packet.Size+4))
 
 	_ = binary.Write(buffer, binary.LittleEndian, packet.Size)
@@ -90,7 +90,9 @@ func (packet *Packet) WriteTo(w io.Writer) (n int64, err error) {
 }
 
 // ReadFrom implements io.ReaderFrom for read a packet from r.
-func (packet *Packet) ReadFrom(r io.Reader) (n int64, err error) {
+func (packet *Packet) ReadFrom(r io.Reader) (int64, error) {
+	var n int64
+
 	if err := binary.Read(r, binary.LittleEndian, &packet.Size); err != nil {
 		return n, fmt.Errorf("rcon: read packet size: %w", err)
 	}
@@ -120,6 +122,7 @@ func (packet *Packet) ReadFrom(r io.Reader) (n int64, err error) {
 	var i int32
 	for i < packet.Size-PacketHeaderSize {
 		var m int
+		var err error
 
 		if m, err = r.Read(packet.body[i:]); err != nil {
 			return n + int64(m) + int64(i), fmt.Errorf("rcon: %w", err)
