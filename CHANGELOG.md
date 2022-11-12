@@ -5,6 +5,14 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [v1.3.4] - 2022-11-12
+### Fixed
+- Minor fixes in packet package.
+
+### Updated
+- Updated Golang version to 1.19.
+- Updated golangci linter to 1.50.1 version.
+
 ## [v1.3.3] - 2022-05-16
 ### Fixed
 - Added "response from not rcon server" error on auth request (Re fixed panic: runtime error: makeslice: len out of range in rcon.Dial #5).
@@ -85,7 +93,8 @@ changed.
 ### Added
 - Initial implementation.
 
-[Unreleased]: https://github.com/gorcon/rcon/compare/v1.3.3...HEAD
+[Unreleased]: https://github.com/gorcon/rcon/compare/v1.3.4...HEAD
+[v1.3.4]: https://github.com/gorcon/rcon/compare/v1.3.3...v1.3.4
 [v1.3.3]: https://github.com/gorcon/rcon/compare/v1.3.2...v1.3.3
 [v1.3.2]: https://github.com/gorcon/rcon/compare/v1.3.1...v1.3.2
 [v1.3.1]: https://github.com/gorcon/rcon/compare/v1.3.0...v1.3.1
