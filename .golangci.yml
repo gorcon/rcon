@@ -184,6 +184,8 @@ linters:
     - dupword
     - gomnd
     - wrapcheck
+    - exhaustruct # mad linter
+    - depguard
 
 issues:
   exclude:

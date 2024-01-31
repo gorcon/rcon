@@ -115,7 +115,7 @@ func Dial(address string, password string, options ...Option) (*Conn, error) {
 	if err := client.auth(password); err != nil {
 		// Failed to auth conn with the server.
 		if err2 := client.Close(); err2 != nil {
-			return &client, fmt.Errorf("%w: %v. Previous error: %v", ErrMultiErrorOccurred, err2, err)
+			return &client, fmt.Errorf("%w: %s. Previous error: %s", ErrMultiErrorOccurred, err2.Error(), err.Error())
 		}
 
 		return &client, fmt.Errorf("rcon: %w", err)
