@@ -5,6 +5,11 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [v1.3.5] - 2024-02-03
+### Updated
+- Updated Golang to 1.21.6 version.
+- Updated golangci linter to 1.55.2 version.
+
 ## [v1.3.4] - 2022-11-12
 ### Fixed
 - Minor fixes in packet package.
@@ -93,7 +98,8 @@ changed.
 ### Added
 - Initial implementation.
 
-[Unreleased]: https://github.com/gorcon/rcon/compare/v1.3.4...HEAD
+[Unreleased]: https://github.com/gorcon/rcon/compare/v1.3.5...HEAD
+[v1.3.5]: https://github.com/gorcon/rcon/compare/v1.3.4...v1.3.5
 [v1.3.4]: https://github.com/gorcon/rcon/compare/v1.3.3...v1.3.4
 [v1.3.3]: https://github.com/gorcon/rcon/compare/v1.3.2...v1.3.3
 [v1.3.2]: https://github.com/gorcon/rcon/compare/v1.3.1...v1.3.2
