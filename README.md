@@ -16,6 +16,7 @@ RCON Protocol described in the [valve documentation](https://developer.valvesoft
 * [ARK: Survival Evolved](https://store.steampowered.com/app/346110)
 * [Counter-Strike: Global Offensive](https://store.steampowered.com/app/730)
 * [Minecraft](https://www.minecraft.net)
+* [Palworld](https://store.steampowered.com/app/1623730/Palworld/)
 
 Open pull request if you have successfully used a package with another game with rcon support and add it to the list.
 
