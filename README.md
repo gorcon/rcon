@@ -17,6 +17,7 @@ RCON Protocol described in the [valve documentation](https://developer.valvesoft
 * [Counter-Strike: Global Offensive](https://store.steampowered.com/app/730)
 * [Minecraft](https://www.minecraft.net)
 * [Palworld](https://store.steampowered.com/app/1623730/Palworld/)
+* [Factorio](https://www.factorio.com/) (start the server with `--rcon-bind`/`--rcon-port` and `--rcon-password` args)
 
 Open pull request if you have successfully used a package with another game with rcon support and add it to the list.
 
