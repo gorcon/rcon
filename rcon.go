@@ -96,6 +96,31 @@ type Conn struct {
 	settings Settings
 }
 
+// open creates a new Conn from an existing net.Conn and authenticates it
+func open(conn net.Conn, password string, settings Settings) (*Conn, error) {
+	client := Conn{conn: conn, settings: settings}
+
+	if err := client.auth(password); err != nil {
+		// Failed to auth conn with the server.
+		if err2 := client.Close(); err2 != nil {
+			return &client, fmt.Errorf("%w: %s. Previous error: %s", ErrMultiErrorOccurred, err2.Error(), err.Error())
+		}
+
+		return &client, fmt.Errorf("rcon: %w", err)
+	}
+
+	return &client, nil
+}
+
+// Open creates a new authorized Conn from an existing net.Conn
+func Open(conn net.Conn, password string, options ...Option) (*Conn, error) {
+	settings := DefaultSettings
+	for _, option := range options {
+		option(&settings)
+	}
+	return open(conn, password, settings)
+}
+
 // Dial creates a new authorized Conn tcp dialer connection.
 func Dial(address string, password string, options ...Option) (*Conn, error) {
 	settings := DefaultSettings
@@ -110,18 +135,7 @@ func Dial(address string, password string, options ...Option) (*Conn, error) {
 		return nil, fmt.Errorf("rcon: %w", err)
 	}
 
-	client := Conn{conn: conn, settings: settings}
-
-	if err := client.auth(password); err != nil {
-		// Failed to auth conn with the server.
-		if err2 := client.Close(); err2 != nil {
-			return &client, fmt.Errorf("%w: %s. Previous error: %s", ErrMultiErrorOccurred, err2.Error(), err.Error())
-		}
-
-		return &client, fmt.Errorf("rcon: %w", err)
-	}
-
-	return &client, nil
+	return open(conn, password, settings)
 }
 
 // Execute sends command type and it string to execute to the remote server,
