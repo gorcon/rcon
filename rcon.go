@@ -96,7 +96,7 @@ type Conn struct {
 	settings Settings
 }
 
-// open creates a new Conn from an existing net.Conn and authenticates it
+// open creates a new Conn from an existing net.Conn and authenticates it.
 func open(conn net.Conn, password string, settings Settings) (*Conn, error) {
 	client := Conn{conn: conn, settings: settings}
 
@@ -112,12 +112,13 @@ func open(conn net.Conn, password string, settings Settings) (*Conn, error) {
 	return &client, nil
 }
 
-// Open creates a new authorized Conn from an existing net.Conn
+// Open creates a new authorized Conn from an existing net.Conn.
 func Open(conn net.Conn, password string, options ...Option) (*Conn, error) {
 	settings := DefaultSettings
 	for _, option := range options {
 		option(&settings)
 	}
+
 	return open(conn, password, settings)
 }
 
