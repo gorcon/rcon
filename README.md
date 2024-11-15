@@ -1,6 +1,6 @@
 # Rcon
 [![GitHub Build](https://github.com/gorcon/rcon/workflows/build/badge.svg)](https://github.com/gorcon/rcon/actions)
-[![Coverage](https://gocover.io/_badge/github.com/gorcon/rcon?0 "coverage")](https://gocover.io/github.com/gorcon/rcon)
+[![Go Coverage](https://github.com/USER/REPO/wiki/coverage.svg)](https://raw.githack.com/wiki/gorcon/rcon/coverage.html)
 [![Go Report Card](https://goreportcard.com/badge/github.com/gorcon/rcon)](https://goreportcard.com/report/github.com/gorcon/rcon)
 [![GoDoc](https://img.shields.io/badge/godoc-reference-blue.svg)](https://godoc.org/github.com/gorcon/rcon)
 
@@ -33,8 +33,8 @@ See [Changelog](CHANGELOG.md) for release details.
 package main
 
 import (
-	"log"
 	"fmt"
+	"log"
 
 	"github.com/gorcon/rcon"
 )
@@ -55,13 +55,49 @@ func main() {
 }
 ```
 
+### With an existing net.Conn
+If you wish to initialize a RCON connection with an already initialized net.Conn, you can use the `Open` function:
+```go
+package main
+
+import (
+	"fmt"
+	"log"
+	"net"
+
+	"github.com/gorcon/rcon"
+)
+
+func main() {
+	netConn, err := net.Dial("tcp", "127.0.0.1:16260")
+	if err != nil {
+		// Failed to open TCP connection to the server.
+		log.Fatalf("expected nil got error: %s", err)
+	}
+	defer netConn.Close()
+	
+	conn, err := rcon.Open(netConn, "password")
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer conn.Close()
+
+	response, err := conn.Execute("help")
+	if err != nil {
+		log.Fatal(err)
+	}
+	
+	fmt.Println(response)	
+}
+```
+
 ## Requirements
 Go 1.15 or higher
 
 ## Contribute
 Contributions are more than welcome! 
 
-If you think that you have found a bug, create an issue and publish the minimum amount of code triggering the bug so 
+If you think that you have found a bug, create an issue and publish the minimum amount of code triggering the bug, so 
 it can be reproduced.
 
 If you want to fix the bug then you can create a pull request. If possible, write a test that will cover this bug.
