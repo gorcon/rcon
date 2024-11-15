@@ -5,7 +5,7 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
-## [v1.3.6] - 2024-11-16
+## [v1.4.0] - 2024-11-16
 ### Fixed
 - Minor fixes in packet package.
 - Fixed Go Coverage badge.
@@ -110,8 +110,8 @@ changed.
 ### Added
 - Initial implementation.
 
-[Unreleased]: https://github.com/gorcon/rcon/compare/v1.3.6...HEAD
-[v1.3.6]: https://github.com/gorcon/rcon/compare/v1.3.5...v1.3.6
+[Unreleased]: https://github.com/gorcon/rcon/compare/v1.4.0...HEAD
+[v1.4.0]: https://github.com/gorcon/rcon/compare/v1.3.5...v1.4.0
 [v1.3.5]: https://github.com/gorcon/rcon/compare/v1.3.4...v1.3.5
 [v1.3.4]: https://github.com/gorcon/rcon/compare/v1.3.3...v1.3.4
 [v1.3.3]: https://github.com/gorcon/rcon/compare/v1.3.2...v1.3.3
