@@ -1,6 +1,6 @@
 # Rcon
 [![GitHub Build](https://github.com/gorcon/rcon/workflows/build/badge.svg)](https://github.com/gorcon/rcon/actions)
-[![Go Coverage](https://github.com/USER/REPO/wiki/coverage.svg)](https://raw.githack.com/wiki/gorcon/rcon/coverage.html)
+[![Go Coverage](https://github.com/gorcon/rcon/wiki/coverage.svg)](https://raw.githack.com/wiki/gorcon/rcon/coverage.html)
 [![Go Report Card](https://goreportcard.com/badge/github.com/gorcon/rcon)](https://goreportcard.com/report/github.com/gorcon/rcon)
 [![GoDoc](https://img.shields.io/badge/godoc-reference-blue.svg)](https://godoc.org/github.com/gorcon/rcon)
 
