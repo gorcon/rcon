@@ -5,6 +5,18 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [v1.3.6] - 2024-11-16
+### Fixed
+- Minor fixes in packet package.
+- Fixed Go Coverage badge.
+
+### Updated
+- Updated Golang to 1.23.3 version.
+- Updated golangci linter to 1.62.0 version.
+
+### Added
+- Added `Open` function as `Dial` alternative for create RCON connection with an existing net.Conn connection.
+
 ## [v1.3.5] - 2024-02-03
 ### Updated
 - Updated Golang to 1.21.6 version.
@@ -98,7 +110,8 @@ changed.
 ### Added
 - Initial implementation.
 
-[Unreleased]: https://github.com/gorcon/rcon/compare/v1.3.5...HEAD
+[Unreleased]: https://github.com/gorcon/rcon/compare/v1.3.6...HEAD
+[v1.3.6]: https://github.com/gorcon/rcon/compare/v1.3.5...v1.3.6
 [v1.3.5]: https://github.com/gorcon/rcon/compare/v1.3.4...v1.3.5
 [v1.3.4]: https://github.com/gorcon/rcon/compare/v1.3.3...v1.3.4
 [v1.3.3]: https://github.com/gorcon/rcon/compare/v1.3.2...v1.3.3

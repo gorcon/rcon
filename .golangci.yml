@@ -1,11 +1,6 @@
-run:
-  skip-dirs:
-    - vendor/
-  skip-files:
-    - ".*_test.go$"
-
 output:
-  format: colored-line-number
+  formats:
+    - format: colored-line-number
   print-issued-lines: true
   print-linter-name: true
 
@@ -57,32 +52,8 @@ linters-settings:
     # put imports beginning with prefix after 3rd-party packages;
     # it's a comma-separated list of prefixes
     local-prefixes: github.com/golangci/golangci-lint
-  golint:
-    # minimal confidence for issues, default is 0.8
-    min-confidence: 0
-  gomnd:
-    settings:
-      mnd:
-        # the list of enabled checks, see https://github.com/tommy-muehle/go-mnd/#checks for description.
-        checks: argument,case,condition,operation,return,assign
-  govet:
-    # report about shadowed variables.
-    check-shadowing: true
-  depguard:
-    list-type: blacklist
-    packages:
-      # logging is allowed only by logutils.Log, logrus
-      # is allowed to use only in logutils package
-      - github.com/Sirupsen/logrus
-      - gopkg.in/sirupsen/logrus.v0
-      - gopkg.in/sirupsen/logrus.v1
-      - gopkg.in/Sirupsen/logrus.v0
-      - gopkg.in/Sirupsen/logrus.v1
   lll:
     line-length: 120 # 120 is default
-  maligned:
-    # print struct with more effective memory layout or not, false by default
-    suggest-new: true
   misspell:
     locale: US
   nakedret:
@@ -92,12 +63,6 @@ linters-settings:
     # Inspect exported functions, default is false. Set to true if no external program/library imports your code.
     # XXX: if you enable this setting, unparam will report a lot of false-positives in text editors:
     # if it's called for subdir of a project it can't find external interfaces. All text editor integrations
-    # with golangci-lint call it on a directory with the changed file.
-    check-exported: false
-  unused:
-    # treat code as a program (not a library) and report unused exported identifiers; default is false.
-    # XXX: if you enable this setting, unused will report a lot of false-positives in text editors:
-    # if it's called for subdir of a project it can't find funcs usages. All text editor integrations
     # with golangci-lint call it on a directory with the changed file.
     check-exported: false
   whitespace:
@@ -167,30 +132,23 @@ linters-settings:
 linters:
   enable-all: true
   disable:
-    - interfacer # is deprecated (since v1.38.0)
-    - scopelint # is deprecated (since v1.39.0)
-    - golint # is deprecated (since v1.41.0)
-    - maligned # is deprecated (since v1.38.0)
-    - ifshort # is deprecated (since v1.48.0)
-    - deadcode # is deprecated (since v1.49.0)
-    - nosnakecase # is deprecated (since v1.48.1)
-    - varcheck # is deprecated (since v1.49.0)
-    - exhaustivestruct # is deprecated (since v1.46.0)
-    - structcheck # is deprecated (since v1.49.0)
     - rowserrcheck # is disabled because of generics
     - sqlclosecheck # is disabled because of generics
-    - structcheck # is disabled because of generics
     - wastedassign # is disabled because of generics
+    - exportloopref # is deprecated (since v1.60.2)
     - dupword
-    - gomnd
     - wrapcheck
     - exhaustruct # mad linter
     - depguard
+    - mnd
 
 issues:
   exclude:
     - "don't use ALL_CAPS in Go names; use CamelCase" # golint
     - "ST1003: should not use ALL_CAPS in Go names; use CamelCase instead" # stylecheck
-    - "shadow: declaration of \"err\"" # govet
     - "DefaultSettings`? is a global variable" # gochecknoglobals
     - "are|is missing in" # exhaustivestruct # v1.33
+  exclude-dirs:
+    - vendor/
+  exclude-files:
+    - ".*_test.go$"

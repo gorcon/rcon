@@ -329,6 +329,7 @@ func TestConn_Execute(t *testing.T) {
 * banid : Ban a SteamID. Use /banid SteamID
 * banuser : Ban a user. Add a -ip to also ban the IP. Add a -r "reason" to specify a reason for the ban. Use: /banuser "username" -ip -r "reason". For example: /banuser "rj" -ip -r "spawn kill"
 * changeoption : Change a server option. Use: /changeoption optionName "newValue"
+* checkModsNeedUpdate : Indicates whether a mod has been updated. Writes answer to log file
 * chopper : Place a helicopter event on a random player
 * createhorde : Spawn a horde near a player. Use : /createhorde count "username". Example /createhorde 150 "rj" Username is optional except from the server console. With no username the horde will be created around you
 * createhorde2 : UI_ServerOptionDesc_CreateHorde2
@@ -338,6 +339,7 @@ func TestConn_Execute(t *testing.T) {
 * invisible : Make a player invisible to zombies. If no username is set then you will become invisible yourself. Use: /invisible "username" -value, ex /invisible "rj" -true (could be -false)
 * kick : Kick a user. Add a -r "reason" to specify a reason for the kick. Use: /kickuser "username" -r "reason"
 * lightning : Use /lightning "username", username is optional except from the server console
+* log : Set log level. Use /log %1 %2
 * noclip : Makes a player pass through walls and structures. Toggles with no value. Use: /noclip "username" -value. Example /noclip "rj" -true (could be -false)
 * players : List all connected players
 * quit : Save and quit the server
@@ -353,6 +355,7 @@ func TestConn_Execute(t *testing.T) {
 * showoptions : Show the list of current server options and values.
 * startrain : Starts raining on the server. Use /startrain "intensity", optional intensity is from 1 to 100
 * startstorm : Starts a storm on the server. Use /startstorm "duration", optional duration is in game hours
+* stats : Set and clear server statistics. Use /stats none|file|console|all period. Example /stats file 10
 * stoprain : Stop raining on the server
 * stopweather : Stop weather on the server
 * teleport : Teleport to a player. Once teleported, wait for the map to appear. Use /teleport "playername" or /teleport "player1" "player2". Example /teleport "rj" or /teleport "rj" "toUser"

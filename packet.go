@@ -63,7 +63,7 @@ func NewPacket(packetType int32, packetID int32, body string) *Packet {
 	size := len([]byte(body)) + int(PacketHeaderSize+PacketPaddingSize)
 
 	return &Packet{
-		Size: int32(size),
+		Size: int32(size), //nolint:gosec // No matter
 		Type: packetType,
 		ID:   packetID,
 		body: []byte(body),
@@ -119,19 +119,19 @@ func (packet *Packet) ReadFrom(r io.Reader) (int64, error) {
 	// response to a SERVERDATA_RESPONSE_VALUE packet.
 	packet.body = make([]byte, packet.Size-PacketHeaderSize)
 
-	var i int32
-	for i < packet.Size-PacketHeaderSize {
+	var i int64
+	for i < int64(packet.Size-PacketHeaderSize) {
 		var m int
 		var err error
 
 		if m, err = r.Read(packet.body[i:]); err != nil {
-			return n + int64(m) + int64(i), fmt.Errorf("rcon: %w", err)
+			return n + int64(m) + i, fmt.Errorf("rcon: %w", err)
 		}
 
-		i += int32(m)
+		i += int64(m)
 	}
 
-	n += int64(i)
+	n += i
 
 	// Remove null terminated strings from response body.
 	if !bytes.Equal(packet.body[len(packet.body)-int(PacketPaddingSize):], []byte{0x00, 0x00}) {
