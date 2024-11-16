@@ -17,9 +17,9 @@ const (
 	// DefaultDeadline provides default deadline to tcp read/write operations.
 	DefaultDeadline = 5 * time.Second
 
-	// MaxCommandLen is an artificial restriction, but it will help in case of random
+	// DefaultMaxCommandLen is an artificial restriction, but it will help in case of random
 	// large queries.
-	MaxCommandLen = 1000
+	DefaultMaxCommandLen = 1000
 
 	// SERVERDATA_AUTH is the first packet sent by the client,
 	// which is used to authenticate the conn with the server.
@@ -148,7 +148,7 @@ func (c *Conn) Execute(command string) (string, error) {
 		return "", ErrCommandEmpty
 	}
 
-	if len(command) > MaxCommandLen {
+	if c.settings.maxCommandLen > 0 && len(command) > c.settings.maxCommandLen {
 		return "", ErrCommandTooLong
 	}
 

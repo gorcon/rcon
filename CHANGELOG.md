@@ -4,6 +4,8 @@ All notable changes to this project will be documented in this file.
 **ATTN**: This project uses [semantic versioning](http://semver.org/).
 
 ## [Unreleased]
+### Added
+- Added maxCommandLen setting and SetMaxCommandLen function.
 
 ## [v1.4.0] - 2024-11-16
 ### Fixed

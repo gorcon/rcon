@@ -132,9 +132,6 @@ linters-settings:
 linters:
   enable-all: true
   disable:
-    - rowserrcheck # is disabled because of generics
-    - sqlclosecheck # is disabled because of generics
-    - wastedassign # is disabled because of generics
     - exportloopref # is deprecated (since v1.60.2)
     - dupword
     - wrapcheck
@@ -144,10 +141,9 @@ linters:
 
 issues:
   exclude:
-    - "don't use ALL_CAPS in Go names; use CamelCase" # golint
+    - "don't use ALL_CAPS in Go names; use CamelCase" # revive
     - "ST1003: should not use ALL_CAPS in Go names; use CamelCase instead" # stylecheck
     - "DefaultSettings`? is a global variable" # gochecknoglobals
-    - "are|is missing in" # exhaustivestruct # v1.33
   exclude-dirs:
     - vendor/
   exclude-files:
