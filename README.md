@@ -10,6 +10,8 @@ Source RCON Protocol implementation in Go.
 RCON Protocol described in the [valve documentation](https://developer.valvesoftware.com/wiki/Source_RCON_Protocol).
 
 ## Supported Games
+Works for any game using the [Source RCON Protocol](https://developer.valvesoftware.com/wiki/Source_RCON_Protocol). Tested on:
+
 * [Project Zomboid](https://store.steampowered.com/app/108600) 
 * [Conan Exiles](https://store.steampowered.com/app/440900)
 * [Rust](https://store.steampowered.com/app/252490) (add +rcon.web 0 to the args when starting the server)
