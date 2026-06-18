@@ -218,6 +218,11 @@ func (c *Conn) auth(password string) error {
 		if response, err = c.readHeader(); err != nil {
 			return err
 		}
+
+		size = response.Size - PacketHeaderSize
+		if size < 0 {
+			return ErrAuthNotRCON
+		}
 	}
 
 	// We must to read response body.
